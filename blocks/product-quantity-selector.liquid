@@ -3,7 +3,7 @@
 {% enddoc %}
 
 {%- liquid
-  assign product_item = product | default: section.settings.product
+  assign product_item = section.settings.product | default: product
   assign product_id = product_item.id | default: section.id
   assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
   assign variant = product_item.selected_or_first_available_variant

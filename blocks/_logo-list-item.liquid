@@ -10,7 +10,6 @@
 <div
   class="ekko-logo-item"
   style="--ekko-logo-scale: {{ block.settings.logo_scale | divided_by: 100.0 }}; --ekko-logo-scale-mobile: {{ block.settings.logo_scale_mobile | divided_by: 100.0 }}; --ekko-logo-active-scale: var(--ekko-logo-scale);"
-  {{ block.shopify_attributes }}
 >
   {%- capture logo_markup -%}
     {%- if block.settings.image != blank -%}

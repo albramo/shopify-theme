@@ -1,0 +1,528 @@
+{% doc %}
+  A product coupon pack launcher. Child blocks describe coupon codes that are
+  copied to the clipboard; this block never applies discounts to the cart.
+{% enddoc %}
+
+{%- liquid
+  assign drawer_id = 'CouponPackDrawer-' | append: section.id | append: '-' | append: block.id
+  assign trigger_label = block.settings.accessibility_label | default: block.settings.heading
+-%}
+
+<product-coupon-pack
+  class="ekko-product-block ekko-coupon-pack"
+  data-drawer-id="{{ drawer_id }}"
+  data-parent-block-id="{{ block.id }}"
+  data-country-code="{{ localization.country.iso_code | upcase }}"
+  data-copy-message="{{ block.settings.copy_message | escape }}"
+  style="
+    --coupon-pack-background: {{ block.settings.background_gradient | default: block.settings.background }};
+    --coupon-pack-color: {{ block.settings.text_color }};
+    --coupon-pack-accent: {{ block.settings.accent_color }};
+    --coupon-pack-gift: {{ block.settings.gift_color }};
+    --coupon-pack-button-background: {{ block.settings.button_background }};
+    --coupon-pack-button-color: {{ block.settings.button_color }};
+    --coupon-pack-card-background: {{ block.settings.card_background }};
+    --coupon-pack-card-color: {{ block.settings.card_text_color }};
+    --coupon-pack-radius: {{ block.settings.corner_radius }}px;
+  "
+>
+  <button
+    class="ekko-coupon-pack__trigger"
+    type="button"
+    aria-controls="{{ drawer_id }}"
+    aria-expanded="false"
+    aria-label="{{ trigger_label | escape }}"
+  >
+    <span class="ekko-coupon-pack__gift" aria-hidden="true">
+      {%- if block.settings.image != blank -%}
+        {{ block.settings.image | image_url: width: 180 | image_tag:
+          loading: 'lazy',
+          widths: '72,108,144,180',
+          sizes: '64px',
+          class: 'ekko-coupon-pack__gift-image'
+        }}
+      {%- else -%}
+        <svg viewBox="0 0 64 64" fill="none" role="presentation">
+          <path d="M7 24.5h50v34H7z" fill="currentColor" opacity=".94"/>
+          <path d="M4 18a5 5 0 0 1 5-5h46a5 5 0 0 1 5 5v9H4v-9Z" fill="currentColor"/>
+          <path d="M27 13C18.5 13 14 10.4 14 6.8 14 3.8 16.2 2 19.1 2 24 2 28.1 7.6 31 13h-4Zm10 0c8.5 0 13-2.6 13-6.2C50 3.8 47.8 2 44.9 2 40 2 35.9 7.6 33 13h4Z" fill="currentColor" opacity=".75"/>
+          <path d="M27.5 13h9v45.5h-9z" fill="var(--coupon-pack-accent)"/>
+          <path d="M4 22.5h56V28H4z" fill="var(--coupon-pack-accent)"/>
+        </svg>
+      {%- endif -%}
+    </span>
+
+    <span class="ekko-coupon-pack__copy">
+      {%- if block.settings.heading != blank -%}
+        <span class="ekko-coupon-pack__heading">{{ block.settings.heading | escape }}</span>
+      {%- endif -%}
+      {%- if block.settings.subheading != blank -%}
+        <span class="ekko-coupon-pack__subheading">
+          {%- if block.settings.show_coupon_count -%}<span data-coupon-count></span> {%- endif -%}
+          {{- block.settings.subheading | escape -}}
+        </span>
+      {%- endif -%}
+    </span>
+
+    <span class="ekko-coupon-pack__claim">
+      <span>{{ block.settings.claim_label | escape }}</span>
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="m7.5 4.5 5.5 5.5-5.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </button>
+
+  <drawer-element
+    id="{{ drawer_id }}"
+    class="drawer drawer--end ekko-coupon-pack__drawer z-40 fixed bottom-0 left-0 h-full w-full pointer-events-none"
+    role="dialog"
+    aria-modal="true"
+    aria-label="{{ block.settings.drawer_heading | escape }}"
+    style="
+      --coupon-pack-accent: {{ block.settings.accent_color }};
+      --coupon-pack-card-background: {{ block.settings.card_background }};
+      --coupon-pack-card-color: {{ block.settings.card_text_color }};
+    "
+    hidden
+  >
+    <overlay-element class="overlay fixed-modal invisible opacity-0 fixed bottom-0 left-0 w-full h-screen pointer-events-none" aria-controls="{{ drawer_id }}" aria-expanded="false"></overlay-element>
+    <div class="drawer__inner z-10 absolute top-0 flex flex-col w-full h-full overflow-hidden">
+      <gesture-element class="drawer__header ekko-coupon-pack__drawer-header flex justify-between opacity-0 invisible relative">
+        <div class="ekko-coupon-pack__drawer-heading">
+          <span class="heading text-2xl leading-tight tracking-tight">{{ block.settings.drawer_heading | escape }}</span>
+          {%- if block.settings.drawer_text != blank -%}
+            <div class="rte text-sm">{{ block.settings.drawer_text }}</div>
+          {%- endif -%}
+        </div>
+        <button class="button button--secondary button--close drawer__close flex items-center justify-center" type="button" is="hover-button" aria-controls="{{ drawer_id }}" aria-expanded="false" aria-label="{{ 'general.accessibility.close' | t | escape }}">
+          <span class="btn-fill" data-fill></span>
+          <span class="btn-text">{%- render 'icon', icon: 'close', size: 'sm' -%}</span>
+        </button>
+      </gesture-element>
+
+      <div class="drawer__content opacity-0 invisible flex flex-col h-full grow shrink">
+        <div class="drawer__scrollable ekko-coupon-pack__scrollable relative flex flex-col grow shrink">
+          <ul class="ekko-coupon-pack__list" role="list">
+            {% content_for 'blocks' %}
+          </ul>
+          <p class="ekko-coupon-pack__status" role="status" aria-live="polite" data-coupon-pack-status></p>
+        </div>
+      </div>
+    </div>
+  </drawer-element>
+</product-coupon-pack>
+
+{% javascript %}
+  if (!customElements.get('product-coupon-pack')) {
+    customElements.define('product-coupon-pack', class ProductCouponPack extends HTMLElement {
+      connectedCallback() {
+        this.abortController = new AbortController();
+        this.drawer = document.getElementById(this.dataset.drawerId);
+        const signal = this.abortController.signal;
+
+        this.drawer?.addEventListener('click', this.handleCopy, { signal });
+        this.drawer?.addEventListener('drawer:afterHide', this.handleDrawerAfterHide, { signal });
+        document.addEventListener('shopify:block:select', this.handleBlockSelect, { signal });
+
+        this.updateAvailability();
+      }
+
+      disconnectedCallback() {
+        this.abortController?.abort();
+        if (this.drawer?.open) this.drawer.hide();
+        if (this.drawer?.parentElement === document.body) this.appendChild(this.drawer);
+      }
+
+      get parentBlock() {
+        return this.closest('.shopify-block');
+      }
+
+      get status() {
+        return this.drawer?.querySelector('[data-coupon-pack-status]');
+      }
+
+      getCouponItem(target) {
+        const item = target.closest?.('[data-coupon-pack-item]');
+        if (item) return item;
+        return target.querySelector?.(':scope > [data-coupon-pack-item]') || null;
+      }
+
+      getSelectedBlockId(event) {
+        if (event.detail?.blockId) return event.detail.blockId;
+
+        const wrapper = event.target?.closest?.('[id^="shopify-block-"]');
+        return wrapper?.id?.replace(/^shopify-block-/, '') || '';
+      }
+
+      updateAvailability() {
+        if (!this.drawer) return;
+        const country = (this.dataset.countryCode || '').toUpperCase();
+
+        this.drawer.querySelectorAll('[data-coupon-pack-item]').forEach((item) => {
+          const countries = (item.dataset.countries || '')
+            .split(',')
+            .map((code) => code.trim().toUpperCase())
+            .filter(Boolean);
+          const countryAllowed = countries.length === 0 || countries.includes(country);
+          const expiry = this.parseExpiry(item.dataset.expiresAt);
+          const expired = expiry !== null && expiry.getTime() < Date.now();
+          const button = item.querySelector('[data-coupon-copy]');
+          const unavailable = !countryAllowed || !button?.dataset.copyCode;
+
+          item.dataset.unavailable = unavailable ? 'true' : 'false';
+          item.dataset.expired = expired ? 'true' : 'false';
+
+          if (!button) return;
+          button.disabled = unavailable || expired;
+          const label = expired
+            ? button.dataset.expiredLabel
+            : unavailable
+              ? button.dataset.unavailableLabel
+              : button.dataset.defaultLabel;
+          this.setButtonLabel(button, label);
+        });
+
+        const availableCount = Array.from(this.drawer.querySelectorAll('[data-coupon-pack-item]'))
+          .filter((item) => item.dataset.unavailable !== 'true' && item.dataset.expired !== 'true').length;
+        const count = this.querySelector('[data-coupon-count]');
+        if (count) count.textContent = availableCount;
+      }
+
+      parseExpiry(value) {
+        if (!value) return null;
+        const normalized = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T23:59:59` : value;
+        const date = new Date(normalized);
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      handleCopy = async (event) => {
+        const button = event.target.closest('[data-coupon-copy]');
+        if (!button || button.disabled) return;
+
+        const code = button.dataset.copyCode;
+        if (!code) return;
+
+        button.disabled = true;
+        try {
+          await this.copyText(code);
+          button.dataset.copied = 'true';
+          this.setButtonLabel(button, button.dataset.copiedLabel);
+          if (this.status) this.status.textContent = this.dataset.copyMessage;
+
+          window.clearTimeout(button.copyResetTimer);
+          button.copyResetTimer = window.setTimeout(() => {
+            button.dataset.copied = 'false';
+            button.disabled = false;
+            this.setButtonLabel(button, button.dataset.copyAgainLabel || button.dataset.defaultLabel);
+            if (this.status) this.status.textContent = '';
+          }, 2400);
+        }
+        catch (error) {
+          button.disabled = false;
+          if (this.status) this.status.textContent = button.dataset.errorLabel;
+        }
+      };
+
+      async copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand('copy');
+        textarea.remove();
+        if (!copied) throw new Error('Copy failed');
+      }
+
+      setButtonLabel(button, label) {
+        const text = button.querySelector('[data-coupon-copy-text]');
+        if (text) text.textContent = label || '';
+      }
+
+      handleBlockSelect = (event) => {
+        const drawer = this.drawer || document.getElementById(this.dataset.drawerId);
+        if (!drawer) return;
+
+        const selectedBlockId = this.getSelectedBlockId(event);
+        if (selectedBlockId === this.dataset.parentBlockId) {
+          if (drawer.open) drawer.hide();
+          return;
+        }
+
+        const selectedItem = this.getCouponItem(event.target);
+        if (selectedItem && drawer.contains(selectedItem)) {
+          if (!drawer.open) drawer.show(null, false);
+          selectedItem.scrollIntoView({ block: 'nearest' });
+          return;
+        }
+
+        if (event.target === this.parentBlock && drawer.open) drawer.hide();
+      };
+
+      handleDrawerAfterHide = () => {
+        if (!Shopify.designMode || !this.drawer || this.drawer.parentElement !== document.body) return;
+        this.appendChild(this.drawer);
+      };
+    });
+  }
+{% endjavascript %}
+
+{% stylesheet %}
+  .ekko-product-coupon-pack-block {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  product-coupon-pack {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ekko-coupon-pack__trigger {
+    display: grid;
+    grid-template-columns: 4.25rem minmax(0, 1fr) auto;
+    align-items: center;
+    width: 100%;
+    min-height: 4.25rem;
+    padding: .4rem .55rem .4rem .25rem;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--coupon-pack-radius);
+    background: var(--coupon-pack-background);
+    color: var(--coupon-pack-color);
+    text-align: start;
+    cursor: pointer;
+    transition: filter 180ms ease, box-shadow 180ms ease;
+  }
+
+  .ekko-coupon-pack__trigger:hover {
+    filter: saturate(1.04) brightness(.985);
+    box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .08);
+  }
+
+  .ekko-coupon-pack__trigger:focus-visible {
+    outline: 2px solid var(--coupon-pack-accent);
+    outline-offset: 2px;
+  }
+
+  .ekko-coupon-pack__gift {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    color: var(--coupon-pack-gift);
+  }
+
+  .ekko-coupon-pack__gift svg,
+  .ekko-coupon-pack__gift-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .ekko-coupon-pack__copy {
+    display: grid;
+    gap: .15rem;
+    min-width: 0;
+    padding-inline: .5rem .75rem;
+  }
+
+  .ekko-coupon-pack__heading {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.2;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .ekko-coupon-pack__subheading {
+    overflow: hidden;
+    font-size: .75rem;
+    line-height: 1.3;
+    opacity: .78;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ekko-coupon-pack__claim {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    min-width: 5.5rem;
+    min-height: 2.75rem;
+    padding: .55rem .9rem;
+    border-radius: 999px;
+    background: var(--coupon-pack-button-background);
+    color: var(--coupon-pack-button-color);
+    font-size: .875rem;
+    font-weight: 650;
+  }
+
+  .ekko-coupon-pack__claim svg {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 180ms ease;
+  }
+
+  .ekko-coupon-pack__trigger:hover .ekko-coupon-pack__claim svg {
+    transform: translateX(.15rem);
+  }
+
+  .ekko-coupon-pack__drawer .drawer__inner {
+    max-width: 30rem;
+  }
+
+  .ekko-coupon-pack__drawer-header {
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .ekko-coupon-pack__drawer-heading {
+    display: grid;
+    gap: .4rem;
+    min-width: 0;
+  }
+
+  .ekko-coupon-pack__drawer-heading .rte {
+    color: rgb(var(--color-foreground) / .65);
+  }
+
+  .ekko-coupon-pack__scrollable {
+    gap: 1rem;
+    scroll-snap-type: none;
+  }
+
+  .ekko-coupon-pack__list {
+    display: grid;
+    gap: .7rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ekko-coupon-pack__status {
+    position: sticky;
+    bottom: .25rem;
+    align-self: center;
+    margin: 0;
+    padding: .55rem .8rem;
+    border-radius: 999px;
+    background: rgb(var(--color-foreground));
+    color: rgb(var(--color-background));
+    font-size: .75rem;
+    line-height: 1.3;
+    box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .14);
+  }
+
+  .ekko-coupon-pack__status:empty {
+    display: none;
+  }
+
+  @media screen and (max-width: 639px) {
+    .ekko-coupon-pack__trigger {
+      grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+      min-height: 3.75rem;
+      padding: .35rem .4rem .35rem .2rem;
+    }
+
+    .ekko-coupon-pack__gift {
+      width: 3.15rem;
+      height: 3.15rem;
+    }
+
+    .ekko-coupon-pack__copy {
+      padding-inline: .35rem .45rem;
+    }
+
+    .ekko-coupon-pack__heading {
+      font-size: .9rem;
+    }
+
+    .ekko-coupon-pack__subheading {
+      font-size: .7rem;
+    }
+
+    .ekko-coupon-pack__claim {
+      min-width: 4.5rem;
+      min-height: 2.5rem;
+      padding-inline: .65rem;
+      font-size: .8rem;
+    }
+
+    .ekko-coupon-pack__drawer .drawer__inner {
+      height: auto;
+      max-height: min(90dvh, 46rem);
+    }
+
+    .ekko-coupon-pack__drawer .drawer__header {
+      padding-block-start: 1.75rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-coupon-pack__trigger,
+    .ekko-coupon-pack__claim svg {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Coupon pack",
+  "class": "ekko-product-coupon-pack-block",
+  "blocks": [
+    { "type": "_product-coupon-pack-item" }
+  ],
+  "settings": [
+    { "type": "header", "content": "Launcher" },
+    { "type": "image_picker", "id": "image", "label": "Gift image" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "$29 New Buyer Coupon Pack" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "coupons available" },
+    { "type": "checkbox", "id": "show_coupon_count", "label": "Show available coupon count", "default": true },
+    { "type": "text", "id": "claim_label", "label": "Button label", "default": "Claim" },
+    { "type": "text", "id": "accessibility_label", "label": "Accessibility label", "default": "Open coupon pack" },
+
+    { "type": "header", "content": "Coupon panel" },
+    { "type": "text", "id": "drawer_heading", "label": "Heading", "default": "Coupon and allowance" },
+    { "type": "richtext", "id": "drawer_text", "label": "Description", "default": "<p>Copy a coupon code and enter it at checkout.</p>" },
+    { "type": "text", "id": "copy_message", "label": "Copy confirmation", "default": "Coupon code copied. Apply it at checkout." },
+
+    { "type": "header", "content": "Colors and shape" },
+    { "type": "color", "id": "background", "label": "Launcher background", "default": "#FF5D73" },
+    { "type": "color_background", "id": "background_gradient", "label": "Launcher gradient", "default": "linear-gradient(90deg, rgba(255, 98, 192, 1), rgba(255, 74, 90, 1) 100%)" },
+    { "type": "color", "id": "text_color", "label": "Launcher text", "default": "#FFFFFF" },
+    { "type": "color", "id": "gift_color", "label": "Gift color", "default": "#FFC33D" },
+    { "type": "color", "id": "accent_color", "label": "Gift accent", "default": "#FF6B21" },
+    { "type": "color", "id": "button_background", "label": "Button background", "default": "#FFFFFF" },
+    { "type": "color", "id": "button_color", "label": "Button text", "default": "#F23B51" },
+    { "type": "color", "id": "card_background", "label": "Coupon card background", "default": "#FFF0F1" },
+    { "type": "color", "id": "card_text_color", "label": "Coupon card text", "default": "#3B3032" },
+    { "type": "range", "id": "corner_radius", "label": "Corner radius", "min": 0, "max": 24, "step": 1, "unit": "px", "default": 12 }
+  ],
+  "presets": [
+    {
+      "name": "Coupon pack",
+      "blocks": [
+        { "type": "_product-coupon-pack-item", "settings": { "heading": "50% allowance", "badge": "New user", "condition": "Orders over US$0.01, max. US$4.00", "code": "WELCOME50" } },
+        { "type": "_product-coupon-pack-item", "settings": { "heading": "US$6.00 allowance", "badge": "New user", "condition": "Orders over US$40.00", "code": "WELCOME6" } },
+        { "type": "_product-coupon-pack-item", "settings": { "heading": "US$12.00 allowance", "badge": "New user", "condition": "Orders over US$100.00", "code": "WELCOME12" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

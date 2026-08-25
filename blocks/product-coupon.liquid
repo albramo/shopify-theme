@@ -1,0 +1,860 @@
+{% doc %}
+  Renders a selectable product coupon group. Child offer blocks define coupon
+  codes, variant and country eligibility, and optional countdown behavior.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = section.settings.product | default: product
+  assign selected_variant = product_item.selected_or_first_available_variant
+-%}
+
+{%- if product_item != blank -%}
+  <product-coupon
+    class="ekko-product-block ekko-product-coupon"
+    data-section-id="{{ section.id }}"
+    data-product-id="{{ product_item.id }}"
+    data-variant-id="{{ selected_variant.id }}"
+    data-variant-title="{{ selected_variant.title | escape }}"
+    data-country-code="{{ localization.country.iso_code | upcase }}"
+    data-selection-mode="{{ block.settings.selection_mode }}"
+    data-hide-ineligible="{{ block.settings.hide_ineligible }}"
+    data-applying-message="{{ 'products.coupon.applying' | t | escape }}"
+    data-applied-message="{{ 'products.coupon.applied' | t | escape }}"
+    data-removed-message="{{ 'products.coupon.removed' | t | escape }}"
+    data-error-message="{{ 'products.coupon.error' | t | escape }}"
+    style="--coupon-background: {{ block.settings.background }}; --coupon-background-selected: {{ block.settings.selected_background }}; --coupon-text: {{ block.settings.text_color }}; --coupon-muted: {{ block.settings.muted_color }}; --coupon-border: {{ block.settings.border_color }}; --coupon-accent: {{ block.settings.accent_color }}; --coupon-badge-background: {{ block.settings.badge_background }}; --coupon-badge-color: {{ block.settings.badge_color }}; --coupon-radius: {{ block.settings.corner_radius }}px;"
+  >
+    <div
+      class="ekko-product-coupon__offers"
+      role="group"
+      aria-label="{{ block.settings.accessibility_label | escape }}"
+    >
+      {% content_for 'blocks' %}
+    </div>
+    <p class="ekko-product-coupon__status sr-only" role="status" aria-live="polite" data-coupon-status></p>
+  </product-coupon>
+{%- endif -%}
+
+{% stylesheet %}
+  product-coupon {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    align-self: start;
+  }
+
+  .ekko-product-coupon__offers {
+    display: grid;
+    grid-auto-rows: max-content;
+    align-items: start;
+    gap: .5rem;
+    height: auto;
+    min-height: 0;
+  }
+
+  .ekko-product-coupon__entry {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    align-self: start;
+  }
+
+  .ekko-product-coupon-offer {
+    display: block;
+    width: fit-content;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    align-self: start;
+    border: 0;
+    border-radius: var(--coupon-radius);
+    background: var(--coupon-background);
+    background: color-mix(in srgb, var(--coupon-badge-background) 18%, var(--coupon-background));
+    color: var(--coupon-text);
+    transition: background-color 180ms ease, opacity 180ms ease;
+  }
+
+  .ekko-product-coupon-offer[data-selected='true'] {
+    background: var(--coupon-background-selected);
+    background: color-mix(in srgb, var(--coupon-badge-background) 36%, var(--coupon-background));
+  }
+
+  .ekko-product-coupon-offer[data-eligible='false'] {
+    opacity: .52;
+  }
+
+  .ekko-product-coupon-offer__control {
+    display: grid;
+    grid-template-areas: 'check details';
+    grid-template-columns: 2.5rem auto;
+    align-items: center;
+    justify-content: start;
+    gap: .55rem;
+    padding: .55rem .65rem;
+    width: fit-content;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    box-sizing: border-box;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .ekko-product-coupon-offer[data-has-countdown='true'] .ekko-product-coupon-offer__control {
+    grid-template-areas: 'check details divider timer';
+    grid-template-columns: 2.5rem auto 1px auto;
+    column-gap: .65rem;
+  }
+
+  .ekko-product-coupon-offer[data-eligible='false'] .ekko-product-coupon-offer__control {
+    cursor: not-allowed;
+  }
+
+  /* Keep the native checkbox accessible but outside the grid layout. The
+     theme-wide input[type='checkbox'] rule has higher specificity than a
+     single class and otherwise turns this back into a 20px, positioned grid
+     item, which creates an empty implicit row below the coupon content. */
+  .ekko-product-coupon-offer > .ekko-product-coupon-offer__control > input.ekko-product-coupon-offer__input[type='checkbox'] {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ekko-product-coupon-offer__check {
+    grid-area: check;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: #fff;
+  }
+
+  .ekko-product-coupon-offer__check::before {
+    position: absolute;
+    inset: .42rem;
+    border: 1px solid var(--coupon-muted);
+    border-radius: .4rem;
+    background: var(--coupon-background);
+    content: '';
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .ekko-product-coupon-offer__check svg {
+    position: relative;
+    z-index: 1;
+    width: 1rem;
+    height: 1rem;
+    opacity: 0;
+    transform: scale(.75);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .ekko-product-coupon-offer__input:checked + .ekko-product-coupon-offer__check {
+    color: #fff;
+  }
+
+  .ekko-product-coupon-offer__input:checked + .ekko-product-coupon-offer__check::before {
+    border-color: var(--coupon-accent);
+    background: var(--coupon-accent);
+  }
+
+  .ekko-product-coupon-offer__input:checked + .ekko-product-coupon-offer__check svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .ekko-product-coupon-offer__input:focus-visible + .ekko-product-coupon-offer__check {
+    outline: 2px solid var(--coupon-accent);
+    outline-offset: 1px;
+    border-radius: .55rem;
+  }
+
+  .ekko-product-coupon-offer__details {
+    grid-area: details;
+    display: grid;
+    gap: .2rem;
+    min-width: 0;
+  }
+
+  .ekko-product-coupon-offer[data-has-countdown='true'] .ekko-product-coupon-offer__details {
+    max-width: clamp(10rem, 22vw, 15rem);
+    overflow: hidden;
+  }
+
+  .ekko-product-coupon-offer__headline {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    justify-self: start;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    padding: .25rem .48rem;
+    border-radius: .5rem;
+    background: var(--coupon-badge-background);
+    color: var(--coupon-badge-color);
+  }
+
+  .ekko-product-coupon-offer__tag {
+    flex: 0 0 auto;
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .ekko-product-coupon-offer__badge {
+    display: block;
+    flex: 1 1 auto;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    font-size: .9375rem;
+    font-weight: 700;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ekko-product-coupon-offer__copy {
+    min-width: 0;
+    color: var(--coupon-muted);
+    font-size: .8125rem;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  .ekko-product-coupon-offer__divider {
+    grid-area: divider;
+    align-self: stretch;
+    width: 1px;
+    min-height: 2.5rem;
+    background: var(--coupon-border);
+  }
+
+  .ekko-product-coupon-offer__divider[hidden] {
+    display: none;
+  }
+
+  .ekko-product-coupon-offer__timer {
+    grid-area: timer;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    justify-self: start;
+    padding: .35rem .4rem;
+    border-radius: .7rem;
+    background: var(--coupon-background-selected);
+    color: var(--coupon-text);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .ekko-product-coupon-offer__timer-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    min-width: 0;
+  }
+
+  .ekko-product-coupon-offer__clock {
+    flex: 0 0 auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--coupon-accent);
+  }
+
+  .ekko-product-coupon-offer__timer-label {
+    color: var(--coupon-muted);
+    font-size: .8125rem;
+    font-weight: 550;
+    white-space: nowrap;
+  }
+
+  .ekko-product-coupon-offer__timer-value {
+    min-width: 5rem;
+    padding: .38rem .48rem;
+    border-radius: .5rem;
+    background: var(--coupon-badge-background);
+    color: var(--coupon-badge-color);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .8125rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 750;
+    letter-spacing: .025em;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .ekko-product-coupon-offer__timer[hidden] {
+    display: none;
+  }
+
+  .ekko-product-coupon-offer__reason {
+    margin: -.2rem .75rem .65rem 4.25rem;
+    color: var(--coupon-muted);
+    font-size: .75rem;
+    line-height: 1.35;
+  }
+
+  .ekko-product-coupon-offer__reason[hidden] {
+    display: none;
+  }
+
+  .ekko-product-coupon[aria-busy='true'] .ekko-product-coupon-offer__control {
+    cursor: progress;
+  }
+
+  .ekko-product-coupon__status:not(.sr-only) {
+    margin-block-start: .45rem;
+    color: #b42318;
+    font-size: .75rem;
+    line-height: 1.4;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-product-coupon__entry,
+    .ekko-product-coupon-offer,
+    .ekko-product-coupon-offer__control {
+      width: 100%;
+    }
+
+    .ekko-product-coupon-offer__control {
+      grid-template-areas: 'check details';
+      grid-template-columns: 2rem minmax(0, 1fr);
+      justify-content: stretch;
+      gap: .35rem .5rem;
+      padding: .45rem .55rem;
+    }
+
+    .ekko-product-coupon-offer[data-has-countdown='true'] .ekko-product-coupon-offer__control {
+      grid-template-areas: 'check divider details timer';
+      grid-template-columns: 2rem 1px minmax(0, 1fr) max-content;
+      justify-content: stretch;
+      column-gap: .4rem;
+    }
+
+    .ekko-product-coupon-offer__check {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .ekko-product-coupon-offer__check::before {
+      inset: .3rem;
+      border-radius: .34rem;
+    }
+
+    .ekko-product-coupon-offer__check svg {
+      width: .875rem;
+      height: .875rem;
+    }
+
+    .ekko-product-coupon-offer[data-has-countdown='true'] .ekko-product-coupon-offer__details {
+      max-width: 100%;
+    }
+
+    .ekko-product-coupon-offer__divider {
+      display: block;
+      min-height: 2.75rem;
+      background: color-mix(in srgb, var(--coupon-muted) 18%, transparent);
+    }
+
+    .ekko-product-coupon-offer__timer {
+      display: grid;
+      grid-template-columns: max-content;
+      align-items: center;
+      justify-items: end;
+      justify-self: end;
+      width: auto;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      gap: .14rem;
+    }
+
+    .ekko-product-coupon-offer__timer-heading {
+      gap: .22rem;
+      justify-self: end;
+    }
+
+    .ekko-product-coupon-offer__clock {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .ekko-product-coupon-offer__timer-label {
+      font-size: .75rem;
+    }
+
+    .ekko-product-coupon-offer__timer-value {
+      min-width: 4.75rem;
+      padding: .28rem .34rem;
+      font-size: .75rem;
+    }
+
+    .ekko-product-coupon-offer__headline {
+      gap: .28rem;
+      padding: .2rem .4rem;
+    }
+
+    .ekko-product-coupon-offer__tag {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .ekko-product-coupon-offer__badge {
+      font-size: .875rem;
+    }
+
+    .ekko-product-coupon-offer__copy {
+      overflow: hidden;
+      font-size: .75rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ekko-product-coupon-offer__reason {
+      margin-inline: .7rem;
+      margin-block: -.1rem .65rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-product-coupon-offer,
+    .ekko-product-coupon-offer__check,
+    .ekko-product-coupon-offer__check svg {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('product-coupon')) {
+    customElements.define('product-coupon', class ProductCoupon extends HTMLElement {
+      static storageKey = 'ekko:selected-coupons:v1';
+      static mutationQueue = Promise.resolve();
+
+      connectedCallback() {
+        // Storefront content must never depend on JavaScript completing. Mark the
+        // component visible first, then progressively enhance it.
+        this.setAttribute('data-ready', '');
+        this.abortController?.abort();
+        this.abortController = new AbortController();
+        const signal = this.abortController.signal;
+
+        this.offers = Array.from(this.querySelectorAll('[data-coupon-offer]'));
+        this.statusElement = this.querySelector('[data-coupon-status]');
+        this.variant = {
+          id: String(this.dataset.variantId || ''),
+          title: String(this.dataset.variantTitle || '')
+        };
+
+        if (!this.offers.length) return;
+
+        try {
+          this.addEventListener('change', this.handleChange, { signal });
+          document.addEventListener('ekko:coupon-selection-change', this.handleExternalSelection, { signal });
+
+          const pubsub = window.theme?.pubsub;
+          const variantChangeEvent = pubsub?.PUB_SUB_EVENTS?.variantChange;
+          if (typeof pubsub?.subscribe === 'function' && variantChangeEvent) {
+            this.variantChangeUnsubscriber = pubsub.subscribe(variantChangeEvent, this.handleVariantChange);
+          }
+
+          this.initializeExpiries();
+          const pruned = this.pruneStoredSelections();
+          this.refreshEligibility(false);
+          this.updateCountdowns();
+          this.countdownTimer = window.setInterval(() => this.updateCountdowns(), 1000);
+
+          if (pruned) this.queueDiscountUpdate(this.getStoredSelections()).catch(() => {});
+        } catch (error) {
+          // Keep the server-rendered offer usable and visible if an optional theme
+          // integration is unavailable. This also prevents one malformed child
+          // block from taking the entire coupon group down.
+          console.error('[Ekko product coupon] Initialization failed.', error);
+        }
+      }
+
+      disconnectedCallback() {
+        this.abortController?.abort();
+        this.variantChangeUnsubscriber?.();
+        window.clearInterval(this.countdownTimer);
+      }
+
+      get countryCode() {
+        return String(this.dataset.countryCode || '').toUpperCase();
+      }
+
+      get selectionMode() {
+        return this.dataset.selectionMode === 'multiple' ? 'multiple' : 'single';
+      }
+
+      getStoredSelections() {
+        try {
+          const value = JSON.parse(localStorage.getItem(ProductCoupon.storageKey) || '[]');
+          return Array.isArray(value) ? value.filter((entry) => entry?.code) : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      setStoredSelections(entries) {
+        try {
+          localStorage.setItem(ProductCoupon.storageKey, JSON.stringify(entries));
+        } catch (error) {
+          // The coupon still works for the current page when storage is unavailable.
+        }
+      }
+
+      normalizeTokens(value) {
+        return String(value || '')
+          .split(/[\n,;|]+/)
+          .map((token) => token.trim().toLowerCase())
+          .filter(Boolean);
+      }
+
+      initializeExpiries() {
+        this.offers.forEach((offer) => {
+          const mode = offer.dataset.countdownMode;
+          let expiry = 0;
+
+          if (mode === 'fixed') {
+            expiry = Date.parse(offer.dataset.endsAt || '') || 0;
+          } else if (mode === 'evergreen') {
+            const key = `ekko:coupon-expiry:${offer.dataset.offerId}:${this.countryCode}`;
+            try {
+              expiry = Number(localStorage.getItem(key)) || 0;
+              if (!expiry) {
+                expiry = Date.now() + Number(offer.dataset.durationMinutes || 0) * 60000;
+                if (expiry > Date.now()) localStorage.setItem(key, String(expiry));
+              }
+            } catch (error) {
+              expiry = Date.now() + Number(offer.dataset.durationMinutes || 0) * 60000;
+            }
+          }
+
+          offer.dataset.expiry = expiry > 0 ? String(expiry) : '';
+        });
+      }
+
+      pruneStoredSelections() {
+        const now = Date.now();
+        const before = this.getStoredSelections();
+        const after = before.filter((entry) => {
+          if (entry.country && entry.country !== this.countryCode) return false;
+          if (entry.expiresAt && Number(entry.expiresAt) <= now) return false;
+          return true;
+        });
+
+        if (after.length === before.length) return false;
+        this.setStoredSelections(after);
+        return true;
+      }
+
+      isCountryEligible(offer) {
+        const rule = offer.dataset.countryRule || 'all';
+        if (rule === 'all') return true;
+
+        const codes = this.normalizeTokens(offer.dataset.countryCodes).map((code) => code.toUpperCase());
+        const matched = codes.includes(this.countryCode);
+        return rule === 'include' ? matched : !matched;
+      }
+
+      isVariantEligible(offer) {
+        const rule = offer.dataset.variantRule || 'all';
+        if (rule === 'all') return true;
+
+        const values = this.normalizeTokens(offer.dataset.variantValues);
+        const matched = values.includes(this.variant.id.toLowerCase()) || values.includes(this.variant.title.toLowerCase());
+        return rule === 'include' ? matched : !matched;
+      }
+
+      isExpired(offer) {
+        const expiry = Number(offer.dataset.expiry || 0);
+        return expiry > 0 && expiry <= Date.now();
+      }
+
+      getEligibility(offer) {
+        if (!offer.dataset.code) return { eligible: false, reason: offer.dataset.setupText };
+        if (this.isExpired(offer)) return { eligible: false, reason: offer.dataset.expiredText };
+        if (!this.isCountryEligible(offer)) return { eligible: false, reason: offer.dataset.countryUnavailableText };
+        if (!this.isVariantEligible(offer)) return { eligible: false, reason: offer.dataset.variantUnavailableText };
+        return { eligible: true, reason: '' };
+      }
+
+      refreshEligibility(updateCartWhenSelectionChanges = true) {
+        const stored = this.getStoredSelections();
+        const selectedCodes = new Set(stored.map((entry) => String(entry.code).toLowerCase()));
+        const invalidSelectedCodes = new Set();
+
+        this.offers.forEach((offer) => {
+          const input = offer.querySelector('[data-coupon-input]');
+          const copy = offer.querySelector('[data-coupon-copy]');
+          const reason = offer.querySelector('[data-coupon-reason]');
+          if (!input || !copy || !reason) return;
+
+          const eligibility = this.getEligibility(offer);
+          const code = String(offer.dataset.code || '').toLowerCase();
+          const selected = eligibility.eligible && selectedCodes.has(code);
+
+          if (!eligibility.eligible && selectedCodes.has(code)) invalidSelectedCodes.add(code);
+
+          offer.dataset.eligible = String(eligibility.eligible);
+          offer.dataset.selected = String(selected);
+          input.disabled = !eligibility.eligible || this.hasAttribute('aria-busy');
+          input.checked = selected;
+          copy.textContent = selected ? offer.dataset.appliedText : offer.dataset.applyText;
+          reason.textContent = eligibility.reason;
+          reason.hidden = eligibility.eligible || !eligibility.reason;
+
+          const shouldHide = !eligibility.eligible && this.dataset.hideIneligible === 'true' && !window.Shopify?.designMode;
+          offer.closest('.ekko-product-coupon__entry')?.toggleAttribute('hidden', shouldHide);
+        });
+
+        if (invalidSelectedCodes.size > 0) {
+          const next = stored.filter((entry) => !invalidSelectedCodes.has(String(entry.code).toLowerCase()));
+          this.setStoredSelections(next);
+          if (updateCartWhenSelectionChanges) this.queueDiscountUpdate(next).catch(() => {});
+        }
+      }
+
+      updateCountdowns() {
+        let expiredSelection = false;
+        const storedCodes = new Set(this.getStoredSelections().map((entry) => String(entry.code).toLowerCase()));
+
+        this.offers.forEach((offer) => {
+          const timer = offer.querySelector('[data-coupon-timer]');
+          const timerValue = timer?.querySelector('[data-coupon-timer-value]');
+          const divider = offer.querySelector('[data-coupon-divider]');
+          const expiry = Number(offer.dataset.expiry || 0);
+          if (!timer || !timerValue || !expiry) {
+            if (timer) timer.hidden = true;
+            if (divider) divider.hidden = true;
+            offer.dataset.hasCountdown = 'false';
+            return;
+          }
+
+          const remaining = Math.max(0, expiry - Date.now());
+          const totalSeconds = Math.floor(remaining / 1000);
+          const days = Math.floor(totalSeconds / 86400);
+          const hours = Math.floor((totalSeconds % 86400) / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+          const time = [hours, minutes, seconds].map((part) => String(part).padStart(2, '0')).join(':');
+
+          timer.hidden = false;
+          if (divider) divider.hidden = false;
+          offer.dataset.hasCountdown = 'true';
+          timerValue.textContent = days > 0 ? `${days}${window.theme?.dateStrings?.d || 'd'} ${time}` : time;
+          timer.dateTime = new Date(expiry).toISOString();
+
+          if (remaining === 0 && offer.dataset.expiredHandled !== 'true') {
+            offer.dataset.expiredHandled = 'true';
+            if (storedCodes.has(String(offer.dataset.code).toLowerCase())) expiredSelection = true;
+          }
+        });
+
+        if (expiredSelection) {
+          const now = Date.now();
+          const next = this.getStoredSelections().filter((entry) => !entry.expiresAt || Number(entry.expiresAt) > now);
+          this.setStoredSelections(next);
+          this.refreshEligibility(false);
+          this.queueDiscountUpdate(next).catch(() => {});
+        } else {
+          this.refreshEligibility(false);
+        }
+      }
+
+      handleVariantChange = (event) => {
+        const data = event?.data;
+        if (!data || String(data.productId) !== String(this.dataset.productId)) return;
+        if (String(data.sectionId) !== String(this.dataset.sectionId)) return;
+
+        this.variant = {
+          id: String(data.variant?.id || ''),
+          title: String(data.variant?.title || '')
+        };
+        this.refreshEligibility(true);
+      };
+
+      handleExternalSelection = (event) => {
+        if (event.detail?.source === this) return;
+        this.refreshEligibility(false);
+      };
+
+      handleChange = async (event) => {
+        const input = event.target instanceof Element
+          ? event.target.closest('[data-coupon-input]')
+          : null;
+        if (!input || input.disabled || this.hasAttribute('aria-busy')) return;
+
+        const offer = input.closest('[data-coupon-offer]');
+        if (!offer) return;
+
+        const previous = this.getStoredSelections();
+        const code = offer.dataset.code;
+        let next = previous.filter((entry) => String(entry.code).toLowerCase() !== String(code).toLowerCase());
+
+        if (input.checked) {
+          if (this.selectionMode === 'single') next = [];
+          next.push({
+            code,
+            country: this.countryCode,
+            expiresAt: Number(offer.dataset.expiry || 0),
+            productId: this.dataset.productId,
+            offerId: offer.dataset.offerId
+          });
+        }
+
+        this.setStoredSelections(next);
+        this.refreshEligibility(false);
+        this.setBusy(true);
+        this.showStatus(this.dataset.applyingMessage, false);
+
+        try {
+          await this.queueDiscountUpdate(next);
+          this.showStatus(input.checked ? this.dataset.appliedMessage : this.dataset.removedMessage, false);
+          document.dispatchEvent(new CustomEvent('ekko:coupon-selection-change', {
+            detail: { source: this, selections: next }
+          }));
+        } catch (error) {
+          this.setStoredSelections(previous);
+          this.refreshEligibility(false);
+          this.showStatus(error?.message || this.dataset.errorMessage, true);
+        } finally {
+          this.setBusy(false);
+        }
+      };
+
+      setBusy(busy) {
+        this.toggleAttribute('aria-busy', busy);
+        this.querySelectorAll('[data-coupon-input]').forEach((input) => {
+          if (busy) {
+            input.dataset.wasDisabled = String(input.disabled);
+            input.disabled = true;
+          } else {
+            input.disabled = input.dataset.wasDisabled === 'true';
+            delete input.dataset.wasDisabled;
+          }
+        });
+      }
+
+      showStatus(message, error) {
+        if (!this.statusElement) return;
+        this.statusElement.textContent = message || '';
+        this.statusElement.classList.toggle('sr-only', !error);
+      }
+
+      queueDiscountUpdate(selections) {
+        ProductCoupon.mutationQueue = ProductCoupon.mutationQueue
+          .catch(() => {})
+          .then(() => this.updateCartDiscounts(selections));
+        return ProductCoupon.mutationQueue;
+      }
+
+      async waitForCartMutation() {
+        window.theme = window.theme || {};
+        window.theme.cartMutationState = window.theme.cartMutationState || { inFlight: false };
+        const startedAt = Date.now();
+        while (window.theme.cartMutationState.inFlight) {
+          if (Date.now() - startedAt > 8000) throw new Error(this.dataset.errorMessage);
+          await new Promise((resolve) => window.setTimeout(resolve, 80));
+        }
+      }
+
+      async updateCartDiscounts(selections) {
+        await this.waitForCartMutation();
+        if (!window.theme?.routes?.cart_update_url || !window.theme?.utils?.fetchConfig || !window.theme?.utils?.parseJsonResponse || !window.theme?.utils?.cartStateFromResponse) {
+          throw new Error(this.dataset.errorMessage);
+        }
+        window.theme.cartMutationState.inFlight = true;
+
+        try {
+          let sections = [];
+          document.documentElement.dispatchEvent(new CustomEvent('cart:bundled-sections', {
+            bubbles: true,
+            detail: { sections }
+          }));
+          sections = [...new Set(sections.filter(Boolean))];
+
+          const codes = [...new Set(selections.map((entry) => entry.code).filter(Boolean))];
+          const response = await fetch(window.theme.routes.cart_update_url, {
+            ...window.theme.utils.fetchConfig(),
+            body: JSON.stringify({
+              discount: codes.join(','),
+              sections,
+              sections_url: window.location.pathname
+            })
+          });
+          const parsedState = await window.theme.utils.parseJsonResponse(response);
+          if (!response.ok) throw new Error(parsedState.description || parsedState.message || this.dataset.errorMessage);
+
+          const cart = window.theme.utils.cartStateFromResponse(parsedState);
+          const pubsub = window.theme?.pubsub;
+          const cartUpdateEvent = pubsub?.PUB_SUB_EVENTS?.cartUpdate;
+          if (typeof pubsub?.publish === 'function' && cartUpdateEvent) {
+            try {
+              pubsub.publish(cartUpdateEvent, {
+                source: 'product-coupon',
+                cart
+              });
+            } catch (renderError) {
+              // The discount mutation has already succeeded. Keep the coupon
+              // selection and refresh the drawer instead of rolling it back.
+              console.error(renderError);
+              document.dispatchEvent(new CustomEvent('cart:refresh', {
+                detail: { open: false }
+              }));
+            }
+          }
+          return cart;
+        } finally {
+          window.theme.cartMutationState.inFlight = false;
+        }
+      }
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:blocks.product_coupon.name",
+  "tag": null,
+  "blocks": [{ "type": "_product-coupon-offer" }],
+  "settings": [
+    { "type": "select", "id": "selection_mode", "label": "t:blocks.product_coupon.settings.selection_mode", "options": [{ "value": "single", "label": "t:blocks.product_coupon.options.single" }, { "value": "multiple", "label": "t:blocks.product_coupon.options.multiple" }], "default": "single" },
+    { "type": "checkbox", "id": "hide_ineligible", "label": "t:blocks.product_coupon.settings.hide_ineligible", "default": false },
+    { "type": "text", "id": "accessibility_label", "label": "t:blocks.product_coupon.settings.accessibility_label", "default": "Available coupons" },
+    { "type": "header", "content": "t:blocks.product_coupon.settings.colors" },
+    { "type": "color", "id": "background", "label": "t:blocks.product_coupon.settings.background", "default": "#FFFFFF" },
+    { "type": "color", "id": "selected_background", "label": "t:blocks.product_coupon.settings.selected_background", "default": "#F5FAEE" },
+    { "type": "color", "id": "text_color", "label": "t:blocks.product_coupon.settings.text_color", "default": "#242424" },
+    { "type": "color", "id": "muted_color", "label": "t:blocks.product_coupon.settings.muted_color", "default": "#626262" },
+    { "type": "color", "id": "border_color", "label": "t:blocks.product_coupon.settings.border_color", "default": "#D7D7D2" },
+    { "type": "color", "id": "accent_color", "label": "t:blocks.product_coupon.settings.accent_color", "default": "#2F7D32" },
+    { "type": "color", "id": "badge_background", "label": "t:blocks.product_coupon.settings.badge_background", "default": "#DDEFCF" },
+    { "type": "color", "id": "badge_color", "label": "t:blocks.product_coupon.settings.badge_color", "default": "#27652A" },
+    { "type": "range", "id": "corner_radius", "label": "t:blocks.product_coupon.settings.corner_radius", "min": 0, "max": 20, "step": 1, "unit": "px", "default": 6 }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.product_coupon.presets.name",
+      "blocks": [{ "type": "_product-coupon-offer" }]
+    }
+  ]
+}
+{% endschema %}

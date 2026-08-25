@@ -14,7 +14,7 @@
 
 {%- if block.settings.label != blank -%}
   {%- if row_value != blank or metafield.value != blank -%}
-  <dl class="ekko-product-spec-row" {{ block.shopify_attributes }}>
+  <dl class="ekko-product-spec-row">
     <dt class="ekko-product-spec-row__label">{{ block.settings.label | escape }}</dt>
     <dd class="ekko-product-spec-row__value">
       {%- if metafield.value != blank -%}

@@ -1,0 +1,109 @@
+{% doc %}
+  Renders one selectable offer inside the Product coupon theme block.
+{% enddoc %}
+
+{%- liquid
+  assign coupon_id = 'Coupon-' | append: section.id | append: '-' | append: block.id
+  assign has_code = false
+  if block.settings.code != blank
+    assign has_code = true
+  endif
+-%}
+
+<div
+  class="ekko-product-coupon__entry ekko-product-coupon-offer"
+  data-coupon-offer
+  data-offer-id="{{ block.id }}"
+  data-code="{{ block.settings.code | strip | escape }}"
+  data-apply-text="{{ block.settings.apply_text | escape }}"
+  data-applied-text="{{ block.settings.applied_text | escape }}"
+  data-setup-text="{{ 'products.coupon.configure_code' | t | escape }}"
+  data-variant-rule="{{ block.settings.variant_rule }}"
+  data-variant-values="{{ block.settings.variant_values | escape }}"
+  data-variant-unavailable-text="{{ block.settings.variant_unavailable_text | escape }}"
+  data-country-rule="{{ block.settings.country_rule }}"
+  data-country-codes="{{ block.settings.country_codes | escape }}"
+  data-country-unavailable-text="{{ block.settings.country_unavailable_text | escape }}"
+  data-countdown-mode="{{ block.settings.countdown_mode }}"
+  data-ends-at="{{ block.settings.ends_at | escape }}"
+  data-duration-minutes="{{ block.settings.duration_minutes }}"
+  data-expired-text="{{ block.settings.expired_text | escape }}"
+  data-eligible="{{ has_code }}"
+  data-selected="false"
+>
+    <label class="ekko-product-coupon-offer__control" for="{{ coupon_id }}">
+      <input
+        id="{{ coupon_id }}"
+        class="ekko-product-coupon-offer__input"
+        type="checkbox"
+        data-coupon-input
+        aria-label="{{ block.settings.apply_text | escape }}: {{ block.settings.value_label | escape }}"
+        {% unless has_code %}disabled{% endunless %}
+      >
+      <span class="ekko-product-coupon-offer__check" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor">
+          <path d="m3.25 8.25 3 3 6.5-6.5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        </svg>
+      </span>
+
+      <span class="ekko-product-coupon-offer__details">
+        {%- if block.settings.value_label != blank -%}
+          <span class="ekko-product-coupon-offer__headline">
+            <svg class="ekko-product-coupon-offer__tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3.4 13.4a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h7a2 2 0 0 1 1.4.6l7.4 7a2 2 0 0 1 0 2.8Z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+              <circle cx="8" cy="8" r="1.25" fill="currentColor" stroke="none"/>
+            </svg>
+            <span class="ekko-product-coupon-offer__badge" title="{{ block.settings.value_label | escape }}">{{ block.settings.value_label | escape }}</span>
+          </span>
+        {%- endif -%}
+
+        <span class="ekko-product-coupon-offer__copy" data-coupon-copy>{{ block.settings.apply_text | escape }}</span>
+      </span>
+
+      <span class="ekko-product-coupon-offer__divider" data-coupon-divider hidden aria-hidden="true"></span>
+
+      <time class="ekko-product-coupon-offer__timer" data-coupon-timer hidden>
+        <span class="ekko-product-coupon-offer__timer-heading">
+          <svg class="ekko-product-coupon-offer__clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.5" stroke-width="1.8"/>
+            <path d="M12 7.5V12l3 1.75" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+          </svg>
+          <span class="ekko-product-coupon-offer__timer-label">{{ block.settings.countdown_label | escape }}</span>
+        </span>
+        <span class="ekko-product-coupon-offer__timer-value" data-coupon-timer-value>00:00:00</span>
+      </time>
+    </label>
+    <p class="ekko-product-coupon-offer__reason" data-coupon-reason hidden></p>
+</div>
+
+{% schema %}
+{
+  "name": "t:blocks.coupon_offer.name",
+  "tag": null,
+  "settings": [
+    { "type": "header", "content": "t:blocks.coupon_offer.settings.content" },
+    { "type": "text", "id": "value_label", "label": "t:blocks.coupon_offer.settings.value_label", "default": "$80 OFF" },
+    { "type": "text", "id": "apply_text", "label": "t:blocks.coupon_offer.settings.apply_text", "default": "Save $80 on this order" },
+    { "type": "text", "id": "applied_text", "label": "t:blocks.coupon_offer.settings.applied_text", "default": "$80 discount applied" },
+    { "type": "text", "id": "code", "label": "t:blocks.coupon_offer.settings.code", "default": "SAVE80" },
+
+    { "type": "header", "content": "t:blocks.coupon_offer.settings.variants" },
+    { "type": "select", "id": "variant_rule", "label": "t:blocks.coupon_offer.settings.variant_rule", "options": [{ "value": "all", "label": "t:blocks.coupon_offer.options.all_variants" }, { "value": "include", "label": "t:blocks.coupon_offer.options.include_variants" }, { "value": "exclude", "label": "t:blocks.coupon_offer.options.exclude_variants" }], "default": "all" },
+    { "type": "textarea", "id": "variant_values", "label": "t:blocks.coupon_offer.settings.variant_values", "info": "t:blocks.coupon_offer.settings.variant_values_info", "visible_if": "{{ block.settings.variant_rule != 'all' }}" },
+    { "type": "text", "id": "variant_unavailable_text", "label": "t:blocks.coupon_offer.settings.variant_unavailable_text", "default": "Unavailable for the selected option", "visible_if": "{{ block.settings.variant_rule != 'all' }}" },
+
+    { "type": "header", "content": "t:blocks.coupon_offer.settings.countries" },
+    { "type": "select", "id": "country_rule", "label": "t:blocks.coupon_offer.settings.country_rule", "options": [{ "value": "all", "label": "t:blocks.coupon_offer.options.all_countries" }, { "value": "include", "label": "t:blocks.coupon_offer.options.include_countries" }, { "value": "exclude", "label": "t:blocks.coupon_offer.options.exclude_countries" }], "default": "all" },
+    { "type": "textarea", "id": "country_codes", "label": "t:blocks.coupon_offer.settings.country_codes", "info": "t:blocks.coupon_offer.settings.country_codes_info", "visible_if": "{{ block.settings.country_rule != 'all' }}" },
+    { "type": "text", "id": "country_unavailable_text", "label": "t:blocks.coupon_offer.settings.country_unavailable_text", "default": "Unavailable in your country", "visible_if": "{{ block.settings.country_rule != 'all' }}" },
+
+    { "type": "header", "content": "t:blocks.coupon_offer.settings.countdown" },
+    { "type": "select", "id": "countdown_mode", "label": "t:blocks.coupon_offer.settings.countdown_mode", "options": [{ "value": "none", "label": "t:blocks.coupon_offer.options.no_countdown" }, { "value": "fixed", "label": "t:blocks.coupon_offer.options.fixed_countdown" }, { "value": "evergreen", "label": "t:blocks.coupon_offer.options.evergreen_countdown" }], "default": "none" },
+    { "type": "text", "id": "countdown_label", "label": "t:blocks.coupon_offer.settings.countdown_label", "default": "Ends in", "visible_if": "{{ block.settings.countdown_mode != 'none' }}" },
+    { "type": "text", "id": "ends_at", "label": "t:blocks.coupon_offer.settings.ends_at", "info": "t:blocks.coupon_offer.settings.ends_at_info", "visible_if": "{{ block.settings.countdown_mode == 'fixed' }}" },
+    { "type": "number", "id": "duration_minutes", "label": "t:blocks.coupon_offer.settings.duration_minutes", "default": 30, "visible_if": "{{ block.settings.countdown_mode == 'evergreen' }}" },
+    { "type": "text", "id": "expired_text", "label": "t:blocks.coupon_offer.settings.expired_text", "default": "Offer expired", "visible_if": "{{ block.settings.countdown_mode != 'none' }}" }
+  ],
+  "presets": [{ "name": "t:blocks.coupon_offer.presets.name" }]
+}
+{% endschema %}

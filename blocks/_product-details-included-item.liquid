@@ -3,7 +3,7 @@
 {% enddoc %}
 
 {%- if block.settings.image != blank or block.settings.heading != blank -%}
-  <div class="ekko-product-details__included-item" {{ block.shopify_attributes }}>
+  <div class="ekko-product-details__included-item">
     <div class="ekko-product-details__included-media">
       {%- if block.settings.image != blank -%}
         {{ block.settings.image | image_url: width: 480 | image_tag: loading: 'lazy', widths: '120,180,240,360,480', sizes: '176px', class: 'ekko-product-details__included-image' }}

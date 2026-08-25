@@ -22,11 +22,13 @@
   </div>
 {%- endcapture -%}
 
-{% render 'slideshow-2-content-block', block: block, content: block_content %}
+{% render 'slideshow-2-content-block', block: block, content: block_content, intrinsic: true %}
 
 {% stylesheet %}
   .slideshow-2__countdown-values {
     display: grid;
+    width: max-content;
+    max-width: 100%;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: .65rem;
   }

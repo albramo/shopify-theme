@@ -1,0 +1,135 @@
+{% doc %}
+  Renders a reusable product notice with preset or custom colors.
+
+  Intended for product, featured product, and product modal surfaces.
+{% enddoc %}
+
+{%- liquid
+  assign notice_background = '#FFF7E6'
+  assign notice_text = '#3E2B12'
+  assign notice_accent = '#E88A00'
+  assign notice_link = '#A84D00'
+  assign notice_border = '#F2C46D'
+
+  case block.settings.style
+    when 'information'
+      assign notice_background = '#EEF6FF'
+      assign notice_text = '#172A42'
+      assign notice_accent = '#2574C8'
+      assign notice_link = '#145A9E'
+      assign notice_border = '#A7CAE8'
+    when 'success'
+      assign notice_background = '#EEF9F1'
+      assign notice_text = '#173B25'
+      assign notice_accent = '#198B43'
+      assign notice_link = '#0F6B32'
+      assign notice_border = '#9FD5AE'
+    when 'neutral'
+      assign notice_background = '#F4F4F2'
+      assign notice_text = '#262626'
+      assign notice_accent = '#5C5C5C'
+      assign notice_link = '#171717'
+      assign notice_border = '#D7D7D2'
+    when 'custom'
+      assign notice_background = block.settings.background_color
+      assign notice_text = block.settings.text_color
+      assign notice_accent = block.settings.accent_color
+      assign notice_link = block.settings.link_color
+      assign notice_border = block.settings.border_color
+  endcase
+
+  assign icon_name = 'alert-circle'
+  case block.settings.icon
+    when 'information'
+      assign icon_name = 'info'
+    when 'check'
+      assign icon_name = 'check-circle'
+  endcase
+
+  assign has_link = false
+  if block.settings.link_label != blank and block.settings.link != blank
+    assign has_link = true
+  endif
+-%}
+
+{%- if block.settings.heading != blank or block.settings.text != blank or has_link -%}
+  <aside
+    class="ekko-product-block ekko-product-notice ekko-product-notice--{{ block.settings.density }}{% unless block.settings.show_border %} ekko-product-notice--borderless{% endunless %}"
+    role="note"
+    data-icon-alignment="{{ block.settings.icon_alignment }}"
+    data-text-alignment="{{ block.settings.text_alignment }}"
+    data-mobile-text-alignment="{{ block.settings.mobile_text_alignment }}"
+    style="--notice-background: {{ notice_background }}; --notice-color: {{ notice_text }}; --notice-accent: {{ notice_accent }}; --notice-link: {{ notice_link }}; --notice-border: {{ notice_border }}; --notice-radius: {{ block.settings.corner_radius }}px; --notice-font-size: {{ block.settings.font_size }}px; --notice-font-size-mobile: {{ block.settings.font_size_mobile }}px;"
+  >
+    {%- if block.settings.show_icon -%}
+      <span class="ekko-product-notice__icon" aria-hidden="true">
+        {%- if block.settings.icon == 'shield' -%}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <path d="M12 3 5 6v5c0 4.65 2.93 8.55 7 10 4.07-1.45 7-5.35 7-10V6l-7-3Z" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="m9.25 12 1.75 1.75L15.25 9.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        {%- else -%}
+          {%- render 'icon', icon: icon_name, size: 'sm' -%}
+        {%- endif -%}
+      </span>
+    {%- endif -%}
+
+    <div class="ekko-product-notice__content">
+      <div class="ekko-product-notice__message">
+        {%- if block.settings.heading != blank -%}
+          <strong class="ekko-product-notice__heading">{{ block.settings.heading | escape }}</strong>
+        {%- endif -%}
+        {%- if block.settings.text != blank -%}
+          <div class="ekko-product-notice__text rte">{{ block.settings.text }}</div>
+        {%- endif -%}
+        {%- if has_link -%}
+          <a
+            class="ekko-product-notice__link"
+            href="{{ block.settings.link }}"
+            {% if block.settings.open_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}
+          >
+            <span>{{ block.settings.link_label | escape }}</span>
+            {%- render 'icon', icon: 'arrow-right', size: 'xs' -%}
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+  </aside>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product notice",
+  "settings": [
+    { "type": "header", "content": "Content" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Buy only from authorized online stores" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Ensure genuine products and official support.</p>" },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "View authorized online stores" },
+    { "type": "url", "id": "link", "label": "Link" },
+    { "type": "checkbox", "id": "open_new_tab", "label": "Open link in a new tab", "default": false },
+
+    { "type": "header", "content": "Icon" },
+    { "type": "checkbox", "id": "show_icon", "label": "Show icon", "default": true },
+    { "type": "select", "id": "icon", "label": "Icon", "options": [{ "value": "warning", "label": "Warning" }, { "value": "information", "label": "Information" }, { "value": "shield", "label": "Shield" }, { "value": "check", "label": "Check" }], "default": "warning", "visible_if": "{{ block.settings.show_icon }}" },
+    { "type": "select", "id": "icon_alignment", "label": "Icon alignment", "options": [{ "value": "top", "label": "Top" }, { "value": "center", "label": "Center" }], "default": "top", "visible_if": "{{ block.settings.show_icon }}" },
+
+    { "type": "header", "content": "Style" },
+    { "type": "select", "id": "style", "label": "Color style", "options": [{ "value": "warning", "label": "Warning" }, { "value": "information", "label": "Information" }, { "value": "success", "label": "Success" }, { "value": "neutral", "label": "Neutral" }, { "value": "custom", "label": "Custom" }], "default": "warning" },
+    { "type": "select", "id": "density", "label": "Spacing", "options": [{ "value": "compact", "label": "Compact" }, { "value": "comfortable", "label": "Comfortable" }], "default": "compact" },
+    { "type": "checkbox", "id": "show_border", "label": "Show subtle border", "default": true },
+    { "type": "range", "id": "corner_radius", "label": "Corner radius", "min": 0, "max": 24, "step": 1, "unit": "px", "default": 12 },
+    { "type": "select", "id": "text_alignment", "label": "Desktop text alignment", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "select", "id": "mobile_text_alignment", "label": "Mobile text alignment", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "range", "id": "font_size", "label": "Desktop font size", "min": 12, "max": 18, "step": 1, "unit": "px", "default": 14 },
+    { "type": "range", "id": "font_size_mobile", "label": "Mobile font size", "min": 12, "max": 18, "step": 1, "unit": "px", "default": 14 },
+
+    { "type": "header", "content": "Custom colors", "visible_if": "{{ block.settings.style == 'custom' }}" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#FFF7E6", "visible_if": "{{ block.settings.style == 'custom' }}" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#3E2B12", "visible_if": "{{ block.settings.style == 'custom' }}" },
+    { "type": "color", "id": "accent_color", "label": "Icon", "default": "#E88A00", "visible_if": "{{ block.settings.style == 'custom' }}" },
+    { "type": "color", "id": "link_color", "label": "Link", "default": "#A84D00", "visible_if": "{{ block.settings.style == 'custom' }}" },
+    { "type": "color", "id": "border_color", "label": "Border", "default": "#F2C46D", "visible_if": "{{ block.settings.style == 'custom' and block.settings.show_border }}" }
+  ],
+  "presets": [{ "name": "Product notice" }]
+}
+{% endschema %}

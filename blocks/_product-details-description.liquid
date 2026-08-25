@@ -3,7 +3,7 @@
 {% enddoc %}
 
 {%- if product.description != blank -%}
-  <article class="ekko-product-details__description" style="--ekko-pd-description-size: {{ block.settings.font_size }}px;" {{ block.shopify_attributes }}>
+  <article class="ekko-product-details__description" style="--ekko-pd-description-size: {{ block.settings.font_size }}px;">
     {%- if block.settings.heading != blank -%}
       <h3 class="ekko-product-details__description-heading">{{ block.settings.heading | escape }}</h3>
     {%- endif -%}
@@ -26,7 +26,8 @@
   }
 
   .ekko-product-details__description-copy {
-    max-width: 70ch;
+    width: 100%;
+    max-width: none;
     color: color-mix(in srgb, currentColor 76%, transparent);
     font-size: var(--ekko-pd-description-size, 1rem);
     line-height: 1.55;

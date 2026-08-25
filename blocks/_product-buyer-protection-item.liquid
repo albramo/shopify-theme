@@ -1,0 +1,213 @@
+{% doc %}
+  Renders one configurable protection benefit inside the Product buyer protection block.
+{% enddoc %}
+
+{%- liquid
+  assign icon_name = block.settings.icon
+  if icon_name == 'verified'
+    assign icon_name = 'check-circle'
+  elsif icon_name == 'support'
+    assign icon_name = 'question'
+  endif
+
+  assign has_link = false
+  if block.settings.link_label != blank and block.settings.link != blank
+    assign has_link = true
+  endif
+-%}
+
+<div class="ekko-buyer-protection-item__card">
+  <span class="ekko-buyer-protection-item__icon" aria-hidden="true">
+    {%- if block.settings.custom_icon != blank -%}
+      {{ block.settings.custom_icon | image_url: width: 96 | image_tag:
+        loading: 'lazy',
+        widths: '32,48,64,96',
+        sizes: '32px',
+        class: 'ekko-buyer-protection-item__image'
+      }}
+    {%- elsif block.settings.icon == 'shield' -%}
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 3 5.25 5.85v4.75c0 4.5 2.72 8.28 6.75 9.7 4.03-1.42 6.75-5.2 6.75-9.7V5.85L12 3Z" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="m8.8 11.65 2.05 2.05 4.35-4.35" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    {%- else -%}
+      {%- render 'icon', icon: icon_name, size: 'sm' -%}
+    {%- endif -%}
+  </span>
+
+  <div class="ekko-buyer-protection-item__content">
+    {%- if block.settings.heading != blank -%}
+      <p class="ekko-buyer-protection-item__heading">{{ block.settings.heading | escape }}</p>
+    {%- endif -%}
+    {%- if block.settings.text != blank -%}
+      <p class="ekko-buyer-protection-item__text">{{ block.settings.text | escape | newline_to_br }}</p>
+    {%- endif -%}
+    {%- if has_link -%}
+      <a class="ekko-buyer-protection-item__link" href="{{ block.settings.link }}">
+        <span>{{ block.settings.link_label | escape }}</span>
+        {%- render 'icon', icon: 'arrow-right', size: 'xs' -%}
+      </a>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .ekko-buyer-protection-item {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    list-style: none;
+  }
+
+  .ekko-buyer-protection-item__card {
+    display: flex;
+    align-items: flex-start;
+    gap: .35rem;
+    min-height: 2rem;
+    padding: .2rem 0;
+    color: var(--buyer-protection-color);
+  }
+
+  .ekko-buyer-protection-item__icon {
+    display: grid;
+    flex: 0 0 var(--buyer-protection-icon-size);
+    place-items: center;
+    width: var(--buyer-protection-icon-size);
+    height: var(--buyer-protection-icon-size);
+    margin-top: .05rem;
+    color: var(--buyer-protection-accent);
+  }
+
+  .ekko-buyer-protection-item__icon svg,
+  .ekko-buyer-protection-item__image {
+    display: block;
+    width: var(--buyer-protection-icon-size);
+    height: var(--buyer-protection-icon-size);
+    object-fit: contain;
+  }
+
+  .ekko-buyer-protection-item__content {
+    display: grid;
+    gap: .16rem;
+    min-width: 0;
+  }
+
+  .ekko-buyer-protection-item__heading {
+    margin: 0;
+    font-size: .78rem;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  .ekko-buyer-protection-item__text {
+    margin: 0;
+    color: var(--buyer-protection-muted);
+    font-size: .72rem;
+    line-height: 1.42;
+  }
+
+  .ekko-buyer-protection[data-show-descriptions='false'] .ekko-buyer-protection-item__text {
+    display: none;
+  }
+
+  .ekko-buyer-protection--style-cards .ekko-buyer-protection-item__card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .7rem;
+    min-height: 3.6rem;
+    padding: .75rem;
+    border-radius: max(.5rem, calc(var(--buyer-protection-radius) - .4rem));
+    background: var(--buyer-protection-item-background);
+  }
+
+  .ekko-buyer-protection--style-cards .ekko-buyer-protection-item__icon {
+    width: calc(var(--buyer-protection-icon-size) + .65rem);
+    height: calc(var(--buyer-protection-icon-size) + .65rem);
+    margin-top: 0;
+    border-radius: 50%;
+    background: var(--buyer-protection-icon-background);
+  }
+
+  .ekko-buyer-protection--style-cards .ekko-buyer-protection-item__heading {
+    font-size: .85rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .ekko-buyer-protection[data-layout='carousel'] .ekko-buyer-protection-item {
+    box-sizing: border-box;
+    flex: 0 0 var(--buyer-protection-item-width, 100%);
+    align-self: stretch;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .ekko-buyer-protection[data-layout='carousel'] .ekko-buyer-protection-item__card {
+    height: 100%;
+  }
+
+  .ekko-buyer-protection--style-compact[data-layout='carousel'] .ekko-buyer-protection-item {
+    padding-inline-end: .75rem;
+    border-inline-end: 1px solid color-mix(in srgb, var(--buyer-protection-color) 12%, transparent);
+  }
+
+  .ekko-buyer-protection--style-compact[data-layout='carousel'] .ekko-buyer-protection-item:last-child {
+    padding-inline-end: 0;
+    border-inline-end: 0;
+  }
+
+  .ekko-buyer-protection--style-compact[data-layout='carousel'] .ekko-buyer-protection-item__card {
+    align-items: center;
+  }
+
+  .ekko-buyer-protection-item__link {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: .25rem;
+    min-height: 2rem;
+    margin-top: .1rem;
+    color: var(--buyer-protection-accent);
+    font-size: .7rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .ekko-buyer-protection-item__link:focus-visible {
+    outline: 2px solid var(--buyer-protection-accent);
+    outline-offset: 2px;
+  }
+
+  @media screen and (max-width: 479px) {
+    .ekko-buyer-protection:not([data-layout='carousel']) .ekko-buyer-protection-item {
+      flex: 1 1 calc(50% - .5rem);
+    }
+
+    .ekko-buyer-protection--style-cards:not([data-layout='carousel']) .ekko-buyer-protection-item {
+      flex-basis: 100%;
+    }
+
+    .ekko-buyer-protection-item__heading {
+      font-size: .76rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:blocks.buyer_protection_item.name",
+  "tag": "li",
+  "class": "ekko-buyer-protection-item",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "t:blocks.buyer_protection_item.settings.heading", "default": "After Sales Assurance" },
+    { "type": "textarea", "id": "text", "label": "t:blocks.buyer_protection_item.settings.text", "default": "Payment information is encrypted and processed securely." },
+    { "type": "select", "id": "icon", "label": "t:blocks.buyer_protection_item.settings.icon", "options": [{ "value": "shield", "label": "t:blocks.buyer_protection_item.options.shield" }, { "value": "lock", "label": "t:blocks.buyer_protection_item.options.lock" }, { "value": "return", "label": "t:blocks.buyer_protection_item.options.return" }, { "value": "package", "label": "t:blocks.buyer_protection_item.options.package" }, { "value": "verified", "label": "t:blocks.buyer_protection_item.options.verified" }, { "value": "support", "label": "t:blocks.buyer_protection_item.options.support" }, { "value": "currency", "label": "t:blocks.buyer_protection_item.options.payment" }], "default": "shield" },
+    { "type": "image_picker", "id": "custom_icon", "label": "t:blocks.buyer_protection_item.settings.custom_icon" },
+    { "type": "text", "id": "link_label", "label": "t:blocks.buyer_protection_item.settings.link_label" },
+    { "type": "url", "id": "link", "label": "t:blocks.buyer_protection_item.settings.link" }
+  ],
+  "presets": [
+    { "name": "t:blocks.buyer_protection_item.presets.name" }
+  ]
+}
+{% endschema %}

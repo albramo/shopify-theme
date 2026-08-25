@@ -3,7 +3,7 @@
 {% enddoc %}
 
 {%- liquid
-  assign product_item = product | default: section.settings.product
+  assign product_item = section.settings.product | default: product
   assign selected_variant = product_item.selected_or_first_available_variant
   assign share_url = selected_variant.url | default: product_item.url | prepend: request.origin
   assign share_image = selected_variant.featured_image | default: product_item.featured_image
@@ -51,6 +51,7 @@
     <drawer-element
       id="{{ help_drawer_id }}"
       class="drawer drawer--end z-30 fixed bottom-0 left-0 h-full w-full pointer-events-none"
+      data-preserve-editor-parent
       role="dialog"
       aria-modal="true"
       aria-label="{{ block.settings.drawer_heading | escape }}"

@@ -1,0 +1,46 @@
+{% doc %}
+  Variant-aware product SKU block shared by product surfaces.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = section.settings.product | default: product
+  assign product_id = product_item.id | default: section.id
+  assign current_sku = product_item.selected_or_first_available_variant.sku
+  assign show_placeholder = false
+  if request.design_mode and current_sku == blank
+    assign show_placeholder = true
+  endif
+-%}
+
+<div
+  id="Sku-{{ section.id }}-{{ product_id }}"
+  class="ekko-product-block ekko-product-sku"
+  data-align="{{ block.settings.alignment }}"
+  data-mobile-align="{{ block.settings.alignment_mobile }}"
+  data-layout="{{ block.settings.layout }}"
+  style="--product-block-color: {{ block.settings.color }}; --product-sku-size: {{ block.settings.font_size }}px;"
+  {% if current_sku == blank and show_placeholder == false %}hidden{% endif %}
+>
+  <span class="ekko-product-sku__content">
+    {%- if block.settings.show_label and block.settings.label != blank -%}
+      <span class="ekko-product-sku__label">{{ block.settings.label | escape }}</span>
+    {%- endif -%}
+    <span class="ekko-product-sku__value">{{ current_sku | default: '—' | escape }}</span>
+  </span>
+</div>
+
+{% schema %}
+{
+  "name": "Product SKU",
+  "settings": [
+    { "type": "checkbox", "id": "show_label", "label": "Show label", "default": true },
+    { "type": "text", "id": "label", "label": "Label", "default": "SKU", "visible_if": "{{ block.settings.show_label }}" },
+    { "type": "select", "id": "layout", "label": "Layout", "options": [{ "value": "inline", "label": "Inline" }, { "value": "stacked", "label": "Stacked" }], "default": "inline" },
+    { "type": "range", "id": "font_size", "label": "Text size", "min": 10, "max": 20, "step": 1, "unit": "px", "default": 12 },
+    { "type": "text_alignment", "id": "alignment", "label": "Desktop alignment", "default": "left" },
+    { "type": "select", "id": "alignment_mobile", "label": "Mobile alignment", "options": [{ "value": "inherit", "label": "Same as desktop" }, { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "inherit" },
+    { "type": "color", "id": "color", "label": "Text color", "default": "#6B6B6B" }
+  ],
+  "presets": [{ "name": "Product SKU" }]
+}
+{% endschema %}

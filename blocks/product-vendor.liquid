@@ -1,0 +1,42 @@
+{% doc %}
+  Product vendor block shared by product surfaces.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = section.settings.product | default: product
+  assign vendor = product_item.vendor
+  if vendor == blank and product_item == blank
+    assign vendor = shop.name
+  endif
+-%}
+
+{%- if vendor != blank -%}
+  <div
+    class="ekko-product-block ekko-product-vendor ekko-product-vendor--{{ block.settings.text_style }}{% if block.settings.uppercase %} ekko-product-vendor--uppercase{% endif %}"
+    data-align="{{ block.settings.alignment }}"
+    data-mobile-align="{{ block.settings.alignment_mobile }}"
+    style="--product-block-color: {{ block.settings.color }}; --product-vendor-size: {{ block.settings.font_size }}px;"
+  >
+    {%- if block.settings.link_vendor and product_item != blank -%}
+      <a href="{{ vendor | url_for_vendor }}">{{ vendor | escape }}</a>
+    {%- else -%}
+      <span>{{ vendor | escape }}</span>
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product vendor",
+  "settings": [
+    { "type": "checkbox", "id": "link_vendor", "label": "Link to vendor", "default": true },
+    { "type": "select", "id": "text_style", "label": "Style", "options": [{ "value": "eyebrow", "label": "Eyebrow" }, { "value": "body", "label": "Body" }], "default": "eyebrow" },
+    { "type": "checkbox", "id": "uppercase", "label": "Uppercase", "default": true },
+    { "type": "range", "id": "font_size", "label": "Text size", "min": 10, "max": 20, "step": 1, "unit": "px", "default": 12 },
+    { "type": "text_alignment", "id": "alignment", "label": "Desktop alignment", "default": "left" },
+    { "type": "select", "id": "alignment_mobile", "label": "Mobile alignment", "options": [{ "value": "inherit", "label": "Same as desktop" }, { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "inherit" },
+    { "type": "color", "id": "color", "label": "Text color", "default": "#6B6B6B" }
+  ],
+  "presets": [{ "name": "Product vendor" }]
+}
+{% endschema %}

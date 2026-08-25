@@ -1,0 +1,691 @@
+{% doc %}
+  Renders a reusable buyer-protection panel for product information areas.
+  Child theme blocks define individual protection benefits and optional links.
+{% enddoc %}
+
+{%- liquid
+  assign has_link = false
+  if block.settings.link != blank
+    assign has_link = true
+  endif
+
+  assign show_item_descriptions = block.settings.show_descriptions
+  if block.settings.style == 'cards'
+    assign show_item_descriptions = block.settings.card_show_descriptions
+  endif
+-%}
+
+<aside
+  class="ekko-product-block ekko-buyer-protection ekko-buyer-protection--style-{{ block.settings.style }} ekko-buyer-protection--density-{{ block.settings.density }}"
+  data-layout="{{ block.settings.layout }}"
+  data-show-descriptions="{{ show_item_descriptions }}"
+  data-carousel-loop="{{ block.settings.carousel_loop }}"
+  data-carousel-autoplay="{{ block.settings.carousel_autoplay }}"
+  data-carousel-speed="{{ block.settings.carousel_speed | times: 1000 }}"
+  data-carousel-desktop-items="{{ block.settings.carousel_desktop_items }}"
+  data-carousel-mobile-items="{{ block.settings.carousel_mobile_items }}"
+  data-carousel-scroll-amount="{{ block.settings.carousel_scroll_amount }}"
+  style="
+    --buyer-protection-background: {{ block.settings.background }};
+    --buyer-protection-card-background: {{ block.settings.card_background }};
+    --buyer-protection-item-background: {{ block.settings.item_background }};
+    --buyer-protection-color: {{ block.settings.text_color }};
+    --buyer-protection-muted: {{ block.settings.muted_color }};
+    --buyer-protection-accent: {{ block.settings.accent_color }};
+    --buyer-protection-icon-background: {{ block.settings.icon_background }};
+    --buyer-protection-icon-size: {{ block.settings.item_icon_size }}px;
+    --buyer-protection-radius: {{ block.settings.corner_radius }}px;
+  "
+  aria-label="{{ block.settings.heading | escape }}"
+>
+  <div class="ekko-buyer-protection__header">
+    {%- if block.settings.style == 'cards' and block.settings.show_header_icon -%}
+      <span class="ekko-buyer-protection__shield" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 2.75 4.75 5.8v5.05c0 4.8 2.93 8.87 7.25 10.4 4.32-1.53 7.25-5.6 7.25-10.4V5.8L12 2.75Z" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="m8.65 11.8 2.18 2.18 4.55-4.55" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+    {%- endif -%}
+
+    <div class="ekko-buyer-protection__heading-group">
+      {%- if block.settings.heading != blank -%}
+        {%- if has_link -%}
+          <a
+            class="ekko-buyer-protection__heading-link"
+            href="{{ block.settings.link }}"
+            aria-label="{{ block.settings.link_label | default: block.settings.heading | escape }}"
+          >
+            <h2 class="ekko-buyer-protection__heading">{{ block.settings.heading | escape }}</h2>
+            {%- if block.settings.show_arrow -%}
+              <span class="ekko-buyer-protection__arrow" aria-hidden="true">
+                {%- render 'icon', icon: 'chevron-right', size: 'sm' -%}
+              </span>
+            {%- endif -%}
+          </a>
+        {%- else -%}
+          <h2 class="ekko-buyer-protection__heading">{{ block.settings.heading | escape }}</h2>
+        {%- endif -%}
+      {%- endif -%}
+      {%- if block.settings.text != blank -%}
+        <div class="ekko-buyer-protection__text rte">{{ block.settings.text }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- if block.settings.layout == 'carousel' and block.settings.carousel_show_navigation -%}
+      <div class="ekko-buyer-protection__controls" data-buyer-protection-controls>
+        <button type="button" data-buyer-protection-previous aria-label="{{ 'general.pagination.previous' | t | escape }}">
+          {%- render 'icon', icon: 'chevron-left', size: 'sm' -%}
+        </button>
+        <button type="button" data-buyer-protection-next aria-label="{{ 'general.pagination.next' | t | escape }}">
+          {%- render 'icon', icon: 'chevron-right', size: 'sm' -%}
+        </button>
+      </div>
+    {%- endif -%}
+  </div>
+
+  <buyer-protection-carousel-v3 class="ekko-buyer-protection__carousel">
+    <ul
+      class="ekko-buyer-protection__items"
+      role="list"
+      data-buyer-protection-track
+      {% if block.settings.layout == 'carousel' %}aria-roledescription="carousel"{% endif %}
+    >
+      {% content_for 'blocks' %}
+    </ul>
+
+    {%- if block.settings.layout == 'carousel' and block.settings.carousel_show_progress -%}
+      <div class="ekko-buyer-protection__progress" data-buyer-protection-progress hidden aria-hidden="true">
+        <span data-buyer-protection-progress-value></span>
+      </div>
+    {%- endif -%}
+
+    {%- if block.settings.layout == 'carousel' -%}
+      <span class="ekko-buyer-protection__status" data-buyer-protection-status aria-live="polite"></span>
+    {%- endif -%}
+  </buyer-protection-carousel-v3>
+</aside>
+
+{% stylesheet %}
+  .ekko-product-buyer-protection-block {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ekko-buyer-protection {
+    width: 100%;
+    min-width: 0;
+    padding: .85rem 0 .35rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    background: var(--buyer-protection-background);
+    color: var(--buyer-protection-color);
+  }
+
+  .ekko-buyer-protection--density-compact {
+    padding-top: .65rem;
+  }
+
+  .ekko-buyer-protection--style-cards {
+    padding: 1.1rem;
+    overflow: hidden;
+    border-top: 0;
+    border-radius: var(--buyer-protection-radius);
+    background: var(--buyer-protection-card-background);
+  }
+
+  .ekko-buyer-protection--style-cards.ekko-buyer-protection--density-compact {
+    padding: .9rem;
+  }
+
+  .ekko-buyer-protection__header {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    min-height: 2rem;
+    color: inherit;
+  }
+
+  .ekko-buyer-protection__shield {
+    display: grid;
+    flex: 0 0 2.9rem;
+    place-items: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 50%;
+    background: var(--buyer-protection-icon-background);
+    color: var(--buyer-protection-accent);
+  }
+
+  .ekko-buyer-protection__shield svg {
+    width: 1.55rem;
+    height: 1.55rem;
+  }
+
+  .ekko-buyer-protection__heading-group {
+    display: grid;
+    flex: 1 1 auto;
+    gap: .22rem;
+    min-width: 0;
+  }
+
+  .ekko-buyer-protection__heading-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    width: fit-content;
+    max-width: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .ekko-buyer-protection__heading {
+    margin: 0;
+    color: inherit;
+    font-family: var(--font-heading-family);
+    font-size: 1.05rem;
+    font-style: var(--font-heading-style);
+    font-weight: var(--font-heading-weight);
+    letter-spacing: -.012em;
+    line-height: 1.25;
+  }
+
+  .ekko-buyer-protection__text {
+    color: var(--buyer-protection-muted);
+    font-size: .78rem;
+    line-height: 1.45;
+  }
+
+  .ekko-buyer-protection__text > * {
+    margin: 0;
+  }
+
+  .ekko-buyer-protection__items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: .55rem 1.2rem;
+    margin: .55rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ekko-buyer-protection--style-cards .ekko-buyer-protection__items {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .55rem;
+    margin-top: .9rem;
+  }
+
+  .ekko-buyer-protection[data-layout='grid'] .ekko-buyer-protection__items {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ekko-buyer-protection__arrow {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--buyer-protection-accent);
+  }
+
+  .ekko-buyer-protection__arrow .icon {
+    transition: transform 180ms ease;
+  }
+
+  .ekko-buyer-protection__heading-link:hover .ekko-buyer-protection__arrow .icon {
+    transform: translateX(.16rem);
+  }
+
+  .ekko-buyer-protection__heading-link:focus-visible {
+    outline: 2px solid var(--buyer-protection-accent);
+    outline-offset: 3px;
+  }
+
+  .ekko-buyer-protection__carousel {
+    display: block;
+    min-width: 0;
+  }
+
+  .ekko-buyer-protection[data-layout='carousel'] .ekko-buyer-protection__items {
+    --buyer-protection-carousel-gap: .75rem;
+    --buyer-protection-item-width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: var(--buyer-protection-carousel-gap);
+    margin-top: .75rem;
+    padding-bottom: .1rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0;
+    scroll-behavior: smooth;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ekko-buyer-protection[data-layout='carousel'] .ekko-buyer-protection__items::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ekko-buyer-protection__controls {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: 0;
+    margin-inline-start: auto;
+  }
+
+  .ekko-buyer-protection__controls[hidden] {
+    display: none;
+  }
+
+  .ekko-buyer-protection__controls button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--buyer-protection-accent);
+    cursor: pointer;
+    transition: color 180ms ease, opacity 180ms ease;
+  }
+
+  .ekko-buyer-protection__controls button::before {
+    content: '';
+    position: absolute;
+    inset: .4rem;
+    border-radius: inherit;
+    background: var(--buyer-protection-icon-background);
+    transition: background-color 180ms ease, transform 180ms ease;
+  }
+
+  .ekko-buyer-protection__controls button .icon {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ekko-buyer-protection__controls button:hover:not(:disabled) {
+    color: var(--buyer-protection-background);
+  }
+
+  .ekko-buyer-protection__controls button:hover:not(:disabled)::before {
+    background: var(--buyer-protection-accent);
+    transform: scale(1.04);
+  }
+
+  .ekko-buyer-protection--style-cards .ekko-buyer-protection__controls button:hover:not(:disabled) {
+    color: var(--buyer-protection-card-background);
+  }
+
+  .ekko-buyer-protection__controls button:disabled {
+    cursor: default;
+    opacity: .35;
+  }
+
+  .ekko-buyer-protection__controls button:focus-visible {
+    outline: 2px solid var(--buyer-protection-accent);
+    outline-offset: 2px;
+  }
+
+  .ekko-buyer-protection__progress {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    margin-top: .65rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--buyer-protection-color) 14%, transparent);
+  }
+
+  .ekko-buyer-protection__progress[hidden] {
+    display: none;
+  }
+
+  .ekko-buyer-protection__progress > span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--buyer-protection-accent);
+    transform-origin: left center;
+    transition: left 220ms ease, width 220ms ease;
+  }
+
+  .ekko-buyer-protection__status {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  [dir='rtl'] .ekko-buyer-protection__progress > span {
+    right: 0;
+    left: auto;
+  }
+
+  @media screen and (max-width: 479px) {
+    .ekko-buyer-protection:not(.ekko-buyer-protection--style-cards) {
+      padding: .75rem 0 .2rem;
+    }
+
+    .ekko-buyer-protection--style-cards,
+    .ekko-buyer-protection--style-cards.ekko-buyer-protection--density-compact {
+      padding: .85rem;
+    }
+
+    .ekko-buyer-protection[data-layout='grid'] .ekko-buyer-protection__items {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ekko-buyer-protection__items {
+      gap: .5rem 1rem;
+    }
+
+    .ekko-buyer-protection[data-layout='carousel'] .ekko-buyer-protection__items {
+      --buyer-protection-carousel-gap: .65rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-buyer-protection__arrow .icon,
+    .ekko-buyer-protection__controls button,
+    .ekko-buyer-protection__controls button::before,
+    .ekko-buyer-protection__progress > span {
+      transition: none;
+    }
+
+    .ekko-buyer-protection[data-layout='carousel'] .ekko-buyer-protection__items {
+      scroll-behavior: auto;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('buyer-protection-carousel-v3')) {
+    customElements.define('buyer-protection-carousel-v3', class extends HTMLElement {
+      connectedCallback() {
+        this.panel = this.closest('.ekko-buyer-protection');
+        if (!this.panel || this.panel.dataset.layout !== 'carousel') return;
+
+        this.track = this.querySelector('[data-buyer-protection-track]');
+        // Navigation lives in the panel header, outside this custom element.
+        // Query from the panel so the controls receive their click handlers.
+        this.controls = this.panel.querySelector('[data-buyer-protection-controls]');
+        this.previous = this.panel.querySelector('[data-buyer-protection-previous]');
+        this.next = this.panel.querySelector('[data-buyer-protection-next]');
+        this.progress = this.querySelector('[data-buyer-protection-progress]');
+        this.progressValue = this.querySelector('[data-buyer-protection-progress-value]');
+        this.status = this.querySelector('[data-buyer-protection-status]');
+        if (!this.track) return;
+
+        this.items = Array.from(this.track.children);
+        this.loop = this.panel.dataset.carouselLoop === 'true';
+        this.autoplay = this.panel.dataset.carouselAutoplay === 'true';
+        this.speed = Math.max(3000, Number(this.panel.dataset.carouselSpeed) || 5000);
+        this.desktopItems = this.panel.dataset.carouselDesktopItems || 'auto';
+        this.mobileItems = this.panel.dataset.carouselMobileItems || 'auto';
+        this.scrollAmount = this.panel.dataset.carouselScrollAmount || 'item';
+        this.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        this.rtl = getComputedStyle(this.track).direction === 'rtl';
+
+        this.handlePrevious = () => this.move(-1);
+        this.handleNext = () => this.move(1);
+        this.handleScroll = () => {
+          cancelAnimationFrame(this.scrollFrame);
+          this.scrollFrame = requestAnimationFrame(() => this.update());
+        };
+        this.handlePointerEnter = () => this.stopAutoplay();
+        this.handlePointerLeave = () => this.startAutoplay();
+        this.handleFocusIn = () => this.stopAutoplay();
+        this.handleFocusOut = (event) => {
+          if (!this.contains(event.relatedTarget)) this.startAutoplay();
+        };
+        this.handleVisibility = () => document.hidden ? this.stopAutoplay() : this.startAutoplay();
+        this.previous?.addEventListener('click', this.handlePrevious);
+        this.next?.addEventListener('click', this.handleNext);
+        this.track.addEventListener('scroll', this.handleScroll, { passive: true });
+        this.addEventListener('pointerenter', this.handlePointerEnter);
+        this.addEventListener('pointerleave', this.handlePointerLeave);
+        this.addEventListener('focusin', this.handleFocusIn);
+        this.addEventListener('focusout', this.handleFocusOut);
+        document.addEventListener('visibilitychange', this.handleVisibility);
+
+        this.resizeObserver = new ResizeObserver(() => {
+          this.applyLayout();
+          this.update();
+        });
+        this.resizeObserver.observe(this.track);
+        requestAnimationFrame(() => {
+          this.applyLayout();
+          this.update();
+          this.startAutoplay();
+        });
+      }
+
+      disconnectedCallback() {
+        this.stopAutoplay();
+        cancelAnimationFrame(this.scrollFrame);
+        this.resizeObserver?.disconnect();
+        this.previous?.removeEventListener('click', this.handlePrevious);
+        this.next?.removeEventListener('click', this.handleNext);
+        this.track?.removeEventListener('scroll', this.handleScroll);
+        this.removeEventListener('pointerenter', this.handlePointerEnter);
+        this.removeEventListener('pointerleave', this.handlePointerLeave);
+        this.removeEventListener('focusin', this.handleFocusIn);
+        this.removeEventListener('focusout', this.handleFocusOut);
+        document.removeEventListener('visibilitychange', this.handleVisibility);
+      }
+
+      get maxIndex() {
+        return Math.max(0, (this.items?.length || 0) - (this.visibleItems || 1));
+      }
+
+      getLayoutItems() {
+        if (!this.track || !this.items?.length) return 1;
+        const isMobile = window.matchMedia('(max-width: 749px)').matches;
+        const configured = isMobile ? this.mobileItems : this.desktopItems;
+        let count = Number.parseInt(configured, 10);
+
+        if (!Number.isFinite(count)) {
+          const width = this.track.clientWidth;
+          const isCards = this.panel.classList.contains('ekko-buyer-protection--style-cards');
+          if (isCards && isMobile) count = this.items.length > 1 ? 1.16 : 1;
+          else if (isCards) count = width >= 500 ? 2 : 1;
+          else if (isMobile) count = this.items.length > 1 ? 2 : 1;
+          else if (width >= 480) count = 3;
+          else if (width >= 320) count = 2;
+          else count = 1;
+        }
+
+        return Math.min(Math.max(count, 1), this.items.length);
+      }
+
+      applyLayout() {
+        if (!this.track || !this.items?.length || this.track.clientWidth <= 0) return;
+        const anchorIndex = Math.min(this.currentIndex, this.maxIndex);
+        this.layoutItems = this.getLayoutItems();
+        this.visibleItems = Math.max(1, Math.floor(this.layoutItems));
+        const styles = getComputedStyle(this.track);
+        const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+        const width = (this.track.clientWidth - gap * (this.layoutItems - 1)) / this.layoutItems;
+        this.track.style.setProperty('--buyer-protection-item-width', `${Math.max(1, width)}px`);
+
+        requestAnimationFrame(() => {
+          this.scrollToItem(Math.min(anchorIndex, this.maxIndex), false);
+          this.update();
+        });
+      }
+
+      get currentIndex() {
+        if (!this.track || !this.items?.length) return 0;
+        const trackRect = this.track.getBoundingClientRect();
+        let nearest = 0;
+        let distance = Number.POSITIVE_INFINITY;
+
+        this.items.forEach((item, index) => {
+          const rect = item.getBoundingClientRect();
+          const itemDistance = this.rtl
+            ? Math.abs(rect.right - trackRect.right)
+            : Math.abs(rect.left - trackRect.left);
+          if (itemDistance < distance) {
+            nearest = index;
+            distance = itemDistance;
+          }
+        });
+        return Math.min(nearest, this.maxIndex);
+      }
+
+      move(direction) {
+        if (!this.items?.length) return;
+        const step = this.scrollAmount === 'page' ? this.visibleItems : 1;
+        let target = this.currentIndex + (direction * step);
+        if (this.loop && target > this.maxIndex) target = 0;
+        else if (this.loop && target < 0) target = this.maxIndex;
+        else target = Math.min(Math.max(target, 0), this.maxIndex);
+        this.scrollToItem(target, true);
+        this.restartAutoplay();
+      }
+
+      scrollToItem(index, smooth) {
+        if (!this.track || !this.items?.length) return;
+        const targetIndex = Math.min(Math.max(index, 0), this.maxIndex);
+        const item = this.items[targetIndex];
+        if (!item) return;
+
+        const trackRect = this.track.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+        const distance = this.rtl
+          ? itemRect.right - trackRect.right
+          : itemRect.left - trackRect.left;
+
+        this.track.scrollBy({
+          left: distance,
+          behavior: smooth && !this.reduceMotion ? 'smooth' : 'auto'
+        });
+      }
+
+      update() {
+        if (!this.track) return;
+        const overflowing = this.maxIndex > 0 && this.track.scrollWidth > this.track.clientWidth + 2;
+        const index = this.currentIndex;
+        this.overflowing = overflowing;
+
+        if (this.controls) this.controls.hidden = !overflowing;
+        if (this.previous) this.previous.disabled = !this.loop && index <= 0;
+        if (this.next) this.next.disabled = !this.loop && index >= this.maxIndex;
+
+        if (this.progress && this.progressValue) {
+          this.progress.hidden = !overflowing;
+          const size = Math.min(100, (this.visibleItems / this.items.length) * 100);
+          const offset = this.maxIndex > 0 ? (index / this.maxIndex) * (100 - size) : 0;
+          this.progressValue.style.width = `${size}%`;
+          if (this.rtl) {
+            this.progressValue.style.right = `${offset}%`;
+            this.progressValue.style.left = 'auto';
+          }
+          else {
+            this.progressValue.style.left = `${offset}%`;
+            this.progressValue.style.right = 'auto';
+          }
+        }
+
+        if (this.status) {
+          const end = Math.min(index + this.visibleItems, this.items.length);
+          this.status.textContent = `${index + 1}–${end} / ${this.items.length}`;
+        }
+        if (!overflowing) this.stopAutoplay();
+      }
+
+      startAutoplay() {
+        if (!this.autoplay || !this.overflowing || this.reduceMotion || document.hidden) return;
+        if (!this.loop && this.currentIndex >= this.maxIndex) return;
+        this.stopAutoplay();
+        this.autoplayTimer = window.setTimeout(() => {
+          this.move(1);
+          this.startAutoplay();
+        }, this.speed);
+      }
+
+      stopAutoplay() {
+        window.clearTimeout(this.autoplayTimer);
+        this.autoplayTimer = undefined;
+      }
+
+      restartAutoplay() {
+        this.stopAutoplay();
+        this.startAutoplay();
+      }
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:blocks.buyer_protection.name",
+  "class": "ekko-product-buyer-protection-block",
+  "blocks": [
+    { "type": "_product-buyer-protection-item" }
+  ],
+  "settings": [
+    { "type": "header", "content": "t:blocks.buyer_protection.settings.content" },
+    { "type": "text", "id": "heading", "label": "t:blocks.buyer_protection.settings.heading", "default": "Buyer Protection" },
+    { "type": "richtext", "id": "text", "label": "t:blocks.buyer_protection.settings.text" },
+    { "type": "checkbox", "id": "show_arrow", "label": "t:blocks.buyer_protection.settings.show_arrow", "default": true },
+    { "type": "checkbox", "id": "show_header_icon", "label": "t:blocks.buyer_protection.settings.show_header_icon", "default": true, "visible_if": "{{ block.settings.style == 'cards' }}" },
+    { "type": "checkbox", "id": "show_descriptions", "label": "t:blocks.buyer_protection.settings.show_descriptions", "default": false, "visible_if": "{{ block.settings.style == 'compact' }}" },
+    { "type": "checkbox", "id": "card_show_descriptions", "label": "t:blocks.buyer_protection.settings.card_show_descriptions", "default": true, "visible_if": "{{ block.settings.style == 'cards' }}" },
+    { "type": "text", "id": "link_label", "label": "t:blocks.buyer_protection.settings.link_label" },
+    { "type": "url", "id": "link", "label": "t:blocks.buyer_protection.settings.link" },
+
+    { "type": "header", "content": "t:blocks.buyer_protection.settings.layout" },
+    { "type": "select", "id": "style", "label": "t:blocks.buyer_protection.settings.style", "options": [{ "value": "compact", "label": "t:blocks.buyer_protection.options.compact_row" }, { "value": "cards", "label": "t:blocks.buyer_protection.options.protection_cards" }], "default": "compact" },
+    { "type": "select", "id": "layout", "label": "t:blocks.buyer_protection.settings.item_layout", "options": [{ "value": "list", "label": "t:blocks.buyer_protection.options.list" }, { "value": "grid", "label": "t:blocks.buyer_protection.options.grid" }, { "value": "carousel", "label": "t:blocks.buyer_protection.options.carousel" }], "default": "list" },
+    { "type": "select", "id": "density", "label": "t:blocks.buyer_protection.settings.spacing", "options": [{ "value": "compact", "label": "t:blocks.buyer_protection.options.compact" }, { "value": "comfortable", "label": "t:blocks.buyer_protection.options.comfortable" }], "default": "compact" },
+    { "type": "range", "id": "item_icon_size", "label": "t:blocks.buyer_protection.settings.item_icon_size", "min": 14, "max": 24, "step": 2, "unit": "px", "default": 16 },
+    { "type": "range", "id": "corner_radius", "label": "t:blocks.buyer_protection.settings.corner_radius", "min": 0, "max": 28, "step": 2, "unit": "px", "default": 16, "visible_if": "{{ block.settings.style == 'cards' }}" },
+
+    { "type": "header", "content": "t:blocks.buyer_protection.settings.carousel", "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "select", "id": "carousel_desktop_items", "label": "t:blocks.buyer_protection.settings.carousel_desktop_items", "options": [{ "value": "auto", "label": "t:blocks.buyer_protection.options.auto" }, { "value": "1", "label": "1" }, { "value": "2", "label": "2" }, { "value": "3", "label": "3" }], "default": "auto", "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "select", "id": "carousel_mobile_items", "label": "t:blocks.buyer_protection.settings.carousel_mobile_items", "options": [{ "value": "auto", "label": "t:blocks.buyer_protection.options.auto" }, { "value": "1", "label": "1" }, { "value": "2", "label": "2" }], "default": "auto", "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "select", "id": "carousel_scroll_amount", "label": "t:blocks.buyer_protection.settings.carousel_scroll_amount", "options": [{ "value": "item", "label": "t:blocks.buyer_protection.options.one_item" }, { "value": "page", "label": "t:blocks.buyer_protection.options.one_page" }], "default": "item", "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "checkbox", "id": "carousel_show_navigation", "label": "t:blocks.buyer_protection.settings.carousel_show_navigation", "default": true, "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "checkbox", "id": "carousel_show_progress", "label": "t:blocks.buyer_protection.settings.carousel_show_progress", "default": true, "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "checkbox", "id": "carousel_loop", "label": "t:blocks.buyer_protection.settings.carousel_loop", "default": true, "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "checkbox", "id": "carousel_autoplay", "label": "t:blocks.buyer_protection.settings.carousel_autoplay", "default": false, "visible_if": "{{ block.settings.layout == 'carousel' }}" },
+    { "type": "range", "id": "carousel_speed", "label": "t:blocks.buyer_protection.settings.carousel_speed", "min": 3, "max": 10, "step": 1, "unit": "s", "default": 5, "visible_if": "{{ block.settings.layout == 'carousel' and block.settings.carousel_autoplay }}" },
+
+    { "type": "header", "content": "t:blocks.buyer_protection.settings.colors" },
+    { "type": "color", "id": "background", "label": "t:blocks.buyer_protection.settings.background", "default": "#FFFFFF" },
+    { "type": "color", "id": "card_background", "label": "t:blocks.buyer_protection.settings.card_background", "default": "#F1F8F4", "visible_if": "{{ block.settings.style == 'cards' }}" },
+    { "type": "color", "id": "item_background", "label": "t:blocks.buyer_protection.settings.item_background", "default": "#FFFFFF", "visible_if": "{{ block.settings.style == 'cards' }}" },
+    { "type": "color", "id": "text_color", "label": "t:blocks.buyer_protection.settings.text_color", "default": "#171717" },
+    { "type": "color", "id": "muted_color", "label": "t:blocks.buyer_protection.settings.muted_color", "default": "#666666" },
+    { "type": "color", "id": "accent_color", "label": "t:blocks.buyer_protection.settings.accent_color", "default": "#171717" },
+    { "type": "color", "id": "icon_background", "label": "t:blocks.buyer_protection.settings.icon_background", "default": "#DDF0E4" }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.buyer_protection.presets.name",
+      "blocks": [
+        { "type": "_product-buyer-protection-item", "settings": { "icon": "return", "heading": "After Sales Assurance", "text": "Support is available after your order has been delivered." } },
+        { "type": "_product-buyer-protection-item", "settings": { "icon": "lock", "heading": "Secure Payment", "text": "Payment information is encrypted and processed securely." } },
+        { "type": "_product-buyer-protection-item", "settings": { "icon": "package", "heading": "Refund for No Delivery", "text": "Get support when an eligible order does not arrive." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,205 @@
+{% doc %}
+  Product feature capsules sourced from a configurable list-of-metaobjects metafield.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = section.settings.product | default: product
+  assign feature_metafield_path = settings.product_feature_capsules_metafield
+  if block.settings.source == 'custom'
+    assign feature_metafield_path = block.settings.metafield
+  endif
+  assign feature_line_packing = block.settings.line_packing | default: 'compact'
+-%}
+
+<div class="ekko-product-block ekko-product-feature-capsules" {{ block.shopify_attributes }}>
+  {%- render 'product-feature-capsules',
+    product: product_item,
+    metafield_path: feature_metafield_path,
+    style: block.settings.style,
+    size: block.settings.size,
+    alignment: block.settings.alignment,
+    packing: feature_line_packing,
+    compact_mobile: block.settings.compact_mobile,
+    show_icons: block.settings.show_icons,
+    use_short_mobile: block.settings.use_short_mobile,
+    allow_item_colors: block.settings.allow_item_colors,
+    background: block.settings.background,
+    text_color: block.settings.text_color,
+    icon_color: block.settings.icon_color,
+    column_gap: block.settings.column_gap,
+    row_gap: block.settings.row_gap,
+    padding_top: block.settings.padding_top,
+    padding_bottom: block.settings.padding_bottom,
+    show_empty_state: true
+  -%}
+</div>
+
+{% schema %}
+{
+  "name": "t:blocks.product_feature_capsules.name",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:blocks.product_feature_capsules.settings.intro"
+    },
+    {
+      "type": "select",
+      "id": "source",
+      "label": "t:blocks.product_feature_capsules.settings.source",
+      "options": [
+        { "value": "global", "label": "t:blocks.product_feature_capsules.options.global" },
+        { "value": "custom", "label": "t:blocks.product_feature_capsules.options.custom" }
+      ],
+      "default": "global"
+    },
+    {
+      "type": "text",
+      "id": "metafield",
+      "label": "t:blocks.product_feature_capsules.settings.metafield",
+      "info": "t:blocks.product_feature_capsules.settings.metafield_info",
+      "visible_if": "{{ block.settings.source == 'custom' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.product_feature_capsules.settings.layout"
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "t:blocks.product_feature_capsules.settings.style",
+      "options": [
+        { "value": "tinted", "label": "t:blocks.product_feature_capsules.options.tinted" },
+        { "value": "outline", "label": "t:blocks.product_feature_capsules.options.outline" },
+        { "value": "neutral", "label": "t:blocks.product_feature_capsules.options.neutral" }
+      ],
+      "default": "tinted"
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "t:blocks.product_feature_capsules.settings.size",
+      "options": [
+        { "value": "compact", "label": "t:blocks.product_feature_capsules.options.compact" },
+        { "value": "standard", "label": "t:blocks.product_feature_capsules.options.standard" },
+        { "value": "large", "label": "t:blocks.product_feature_capsules.options.large" }
+      ],
+      "default": "standard"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "t:blocks.product_feature_capsules.settings.alignment",
+      "options": [
+        { "value": "left", "label": "t:blocks.product_feature_capsules.options.left" },
+        { "value": "center", "label": "t:blocks.product_feature_capsules.options.center" },
+        { "value": "right", "label": "t:blocks.product_feature_capsules.options.right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "line_packing",
+      "label": "t:blocks.product_feature_capsules.settings.packing",
+      "options": [
+        { "value": "natural", "label": "t:blocks.product_feature_capsules.options.natural" },
+        { "value": "compact", "label": "t:blocks.product_feature_capsules.options.compact_packing" }
+      ],
+      "default": "compact"
+    },
+    {
+      "type": "checkbox",
+      "id": "compact_mobile",
+      "label": "t:blocks.product_feature_capsules.settings.compact_mobile",
+      "default": true,
+      "visible_if": "{{ block.settings.line_packing == 'compact' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icons",
+      "label": "t:blocks.product_feature_capsules.settings.show_icons",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "use_short_mobile",
+      "label": "t:blocks.product_feature_capsules.settings.use_short_mobile",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "allow_item_colors",
+      "label": "t:blocks.product_feature_capsules.settings.allow_item_colors",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "label": "t:blocks.product_feature_capsules.settings.column_gap",
+      "min": 2,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "row_gap",
+      "label": "t:blocks.product_feature_capsules.settings.row_gap",
+      "min": 2,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.product_feature_capsules.settings.colors"
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "t:blocks.product_feature_capsules.settings.background",
+      "default": "#FFF0EC"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "t:blocks.product_feature_capsules.settings.icon_color",
+      "default": "#FF5A3C"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:blocks.product_feature_capsules.settings.text_color",
+      "default": "#272727"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.product_feature_capsules.settings.spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:blocks.product_feature_capsules.settings.padding_top",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:blocks.product_feature_capsules.settings.padding_bottom",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    { "name": "t:blocks.product_feature_capsules.presets.name" }
+  ]
+}
+{% endschema %}

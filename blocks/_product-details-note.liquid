@@ -12,7 +12,7 @@
 -%}
 
 {%- if block.settings.text != blank or block.settings.page != blank or metafield.value != blank -%}
-  <div class="ekko-product-detail-note rte" {{ block.shopify_attributes }}>
+  <div class="ekko-product-detail-note rte">
     {%- if metafield.value != blank -%}
       {{ metafield | metafield_tag }}
     {%- elsif block.settings.page != blank -%}

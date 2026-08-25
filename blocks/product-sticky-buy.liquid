@@ -5,7 +5,7 @@
 {% enddoc %}
 
 {%- liquid
-  assign product_item = product | default: section.settings.product
+  assign product_item = section.settings.product | default: product
   assign product_id = product_item.id | default: section.id
   assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
   assign sticky_id = 'ProductStickyForm-' | append: section.id | append: '-' | append: product_id
@@ -34,7 +34,6 @@
     data-variant-interaction="{{ block.settings.variant_interaction }}"
     data-section-id="{{ section.id }}"
     data-product-id="{{ product_id }}"
-    {{ block.shopify_attributes }}
     style="
       --sticky-custom-width: {{ block.settings.custom_content_width }}vw;
       --sticky-bottom-gap: {{ block.settings.bottom_spacing }}px;
