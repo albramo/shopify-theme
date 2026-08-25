@@ -20,23 +20,28 @@
     {%- for option in product.options_with_values -%}
       {%- if block.settings.picker_type == 'button' -%}
         {%- liquid
-          assign is_color = false
+          assign swatch_mode = 'button'
+          assign downcased_option = option.name | downcase | strip
           if block.settings.enable_color_swatches
-            assign swatch_file_extension = 'png'
-            assign swatch_trigger_list = 'products.general.color_swatch_trigger' | t | downcase | split: ','
-            assign downcased_option = option.name | downcase
-            for trigger in swatch_trigger_list
-              assign swatch_trigger = trigger | strip
-              if downcased_option contains swatch_trigger
-                assign is_color = true
-              elsif swatch_trigger == 'color' and downcased_option contains 'colour'
-                assign is_color = true
-              endif
-
-              if is_color == true
+            assign image_option_rules = block.settings.image_swatch_options | replace: ',', '<br />' | newline_to_br | split: '<br />'
+            for option_rule in image_option_rules
+              assign normalized_rule = option_rule | strip | downcase
+              if normalized_rule != blank and normalized_rule == downcased_option
+                assign swatch_mode = 'image'
                 break
               endif
             endfor
+
+            if swatch_mode == 'button'
+              assign color_option_rules = block.settings.color_swatch_options | replace: ',', '<br />' | newline_to_br | split: '<br />'
+              for option_rule in color_option_rules
+                assign normalized_rule = option_rule | strip | downcase
+                if normalized_rule != blank and normalized_rule == downcased_option
+                  assign swatch_mode = 'color'
+                  break
+                endif
+              endfor
+            endif
           endif
 
           assign is_size = false
@@ -95,7 +100,10 @@
               </div>
             {%- endif -%}
           </div>
-          <ul class="swatches swatches--{{ settings.rounded_swatch }}{% if block.settings.color_swatch_type == 'variant' %} swatches--variant{% endif %} flex items-start flex-wrap gap-4">
+          <ul
+            class="swatches swatches--{{ settings.rounded_swatch }} ekko-variant-swatches ekko-variant-swatches--{{ swatch_mode }} ekko-variant-swatches--{{ block.settings.swatch_shape }} ekko-variant-swatches--{{ block.settings.swatch_size }}{% if swatch_mode == 'image' %} ekko-variant-swatches--image-fit-{{ block.settings.image_swatch_fit }}{% endif %} flex items-start flex-wrap gap-4"
+            style="--ekko-swatch-selected-color: {{ block.settings.selected_swatch_color | default: '#171717' }};"
+          >
             {%- for value in option.values -%}
               <li>
                 <magnet-element class="block">
@@ -111,13 +119,16 @@
                     data-option-value="{{ value | escape }}"
                     data-option-value-id="{{ value.id }}"
                   />
-                  {%- if is_color or value.swatch != blank -%}
+                  {%- if swatch_mode != 'button' -%}
                     {%- liquid
+                      assign swatch_image = blank
+                      assign swatch_fallback = value | split: ' ' | last | handle
+                      assign swatch_fallback_override = false
+                      assign swatch_has_visual = false
+
                       if value.swatch == blank
-                        assign file_extension = swatch_file_extension | default: 'png'
+                        assign file_extension = 'png'
                         assign file_name = value | handle | append: '.' | append: file_extension
-                        assign swatch_fallback = value | split: ' ' | last | handle
-                        assign swatch_fallback_override = false
 
                         if settings.swatch_config != blank
                           assign value_downcase = value | downcase
@@ -131,6 +142,7 @@
                               if swatch_value contains '#'
                                 assign swatch_fallback = swatch_value
                                 assign swatch_fallback_override = true
+                                assign swatch_has_visual = true
                               else
                                 assign file_name = swatch_value
                               endif
@@ -139,42 +151,60 @@
                           endfor
                         endif
 
-                        assign swatch_image = blank
                         if images[file_name] != blank
-                          assign swatch_image = images[file_name] | image_url: width: 72
+                          assign swatch_image = images[file_name] | image_url: width: 192
+                          assign swatch_has_visual = true
                         elsif file_name contains '//cdn.shopify.com/'
                           assign swatch_image = file_name
+                          assign swatch_has_visual = true
                         endif
                       else
-                        assign swatch_image = blank
-                        assign swatch_fallback = value | split: ' ' | last | handle
                         if value.swatch.image
-                          assign swatch_image = value.swatch.image | image_url: width: 72
+                          assign swatch_image = value.swatch.image | image_url: width: 192
                           assign swatch_fallback_override = false
+                          assign swatch_has_visual = true
                         elsif value.swatch.color
                           assign swatch_fallback = value.swatch.color
+                          assign swatch_fallback_override = true
+                          assign swatch_has_visual = true
                         endif
                       endif
 
-                      if block.settings.color_swatch_type == 'variant'
+                      if swatch_mode == 'image'
                         for variant in product.variants
                           assign variant_value = variant.options[option_index_0]
-                          if variant_value contains value and variant.image
-                            assign swatch_image = variant.image | image_url: width: 144
+                          if variant_value == value and variant.image
+                            assign swatch_image = variant.image | image_url: width: 240
                             assign swatch_fallback_override = false
+                            assign swatch_has_visual = true
                             break
                           endif
                         endfor
+                        if swatch_image == blank
+                          assign swatch_has_visual = false
+                        endif
+                      elsif swatch_mode == 'color'
+                        assign swatch_has_visual = true
                       endif
                     -%}
-                    <label
-                      for="{{ section_id }}-{{ product_id }}-{{ option.name | handle }}-{{ forloop.index0 }}"
-                      class="color-swatch{% if swatch_fallback_override == false and swatch_image != blank %} with-image{% endif %} inline-block cursor-pointer relative{% if block.settings.color_swatch_type == 'variant' and swatch_fallback_override == false and swatch_image != blank %} aspect-{{ image_ratio }} mobile:aspect-{{ image_ratio_mobile }}{% unless image_fill %} aspect-contain{% endunless %}{% endif %}"
-                      title="{{ value | escape }}"
-                      style="--swatch-background: {{ swatch_fallback }};{% if swatch_fallback_override == false and swatch_image != blank %} --swatch-background-image: url({{ swatch_image }});{% endif %}"
-                    >
-                      <span class="tooltip opacity-0 pointer-events-none text-xs rounded-full z-10">{{ value | escape }}</span>
-                    </label>
+                    {%- if swatch_has_visual -%}
+                      <label
+                        for="{{ section_id }}-{{ product_id }}-{{ option.name | handle }}-{{ forloop.index0 }}"
+                        class="color-swatch ekko-variant-swatch ekko-variant-swatch--{{ swatch_mode }}{% if swatch_fallback_override == false and swatch_image != blank %} with-image{% endif %} inline-block cursor-pointer relative"
+                        title="{{ value | escape }}"
+                        style="--swatch-background: {{ swatch_fallback }};{% if swatch_fallback_override == false and swatch_image != blank %} --swatch-background-image: url({{ swatch_image }});{% endif %}"
+                      >
+                        <span class="tooltip opacity-0 pointer-events-none text-xs rounded-full z-10">{{ value | escape }}</span>
+                      </label>
+                    {%- else -%}
+                      <label
+                        for="{{ section_id }}-{{ product_id }}-{{ option.name | handle }}-{{ forloop.index0 }}"
+                        class="label-swatch inline-block text-sm font-medium leading-none cursor-pointer relative"
+                        title="{{ value | escape }}"
+                      >
+                        {{- value -}}
+                      </label>
+                    {%- endif -%}
                   {%- else -%}
                     <label
                       for="{{ section_id }}-{{ product_id }}-{{ option.name | handle }}-{{ forloop.index0 }}"

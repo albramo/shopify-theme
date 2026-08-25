@@ -27,6 +27,23 @@
     assign is_modal = true
   endif
 
+  assign mobile_thumbnail_enabled = section.settings.mobile_thumbnail
+  if section.settings.mobile_layout == 'edge_to_edge'
+    assign mobile_thumbnail_enabled = true
+  endif
+
+  assign media_size = section.settings.media_size | default: 58
+  assign details_size = 100 | minus: media_size
+  assign page_width = settings.page_width | default: 1600
+  assign media_max_width = page_width | times: media_size | divided_by: 100.0 | ceil
+  assign media_viewport_width = media_size
+  if section.settings.content_width == 'custom'
+    assign media_viewport_width = section.settings.custom_content_width | times: media_size | divided_by: 100.0
+  endif
+  assign details_position = section.settings.details_position | default: 'start'
+  assign details_padding = section.settings.details_padding | default: 40
+  assign media_padding = section.settings.media_padding | default: 16
+
   assign frame_class = 'page-width'
   if is_modal
     assign frame_class = ''
@@ -35,6 +52,8 @@
   endif
 -%}
 
+{%- capture product_media_sizes -%}(max-width: 989px) 100vw, {% if is_modal %}{{ media_size }}vw{% elsif section.settings.content_width == 'page' %}min({{ media_max_width }}px, {{ media_size }}vw){% else %}{{ media_viewport_width }}vw{% endif %}{%- endcapture -%}
+
 <style>
   #shopify-section-{{ section.id }},
   [data-product-showcase-section="{{ section.id }}"] {
@@ -42,10 +61,14 @@
     --section-padding-bottom: {{ section.settings.padding_bottom }}px;
     --showcase-content-width: {{ section.settings.custom_content_width }}vw;
     --showcase-media-size: {{ section.settings.media_size }}%;
+    --showcase-media-track: {{ media_size }}fr;
+    --showcase-details-track: {{ details_size }}fr;
     --showcase-gap-desktop: {{ section.settings.desktop_gap }}px;
     --showcase-gap-mobile: {{ section.settings.mobile_gap }}px;
     --showcase-block-gap: {{ section.settings.block_gap }}px;
     --showcase-radius: {{ section.settings.panel_radius }}px;
+    --showcase-details-padding: {{ details_padding }}px;
+    --showcase-media-padding: {{ media_padding }}px;
     --showcase-panel-background: {{ section.settings.panel_background.rgb }};
     --showcase-media-background: {{ section.settings.media_background.rgb }};
     --color-foreground: {{ section.settings.color_text.rgb }};
@@ -70,11 +93,13 @@
   data-product-showcase-section="{{ section.id }}"
 >
   <div class="ekko-product-showcase__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
-    <div
-      class="ekko-product-showcase ekko-product-showcase--{{ section.settings.layout_style }} product product--{{ section.settings.gallery_layout }}{% if placeholder == false and media_count == 0 %} no-media{% endif %}"
+    <product-showcase-layout
+      class="ekko-product-showcase ekko-product-showcase--{{ section.settings.layout_style }} ekko-product-showcase--{{ mode | default: 'featured' }} product product--{{ section.settings.gallery_layout }}{% if placeholder == false and media_count == 0 %} no-media{% endif %}"
       data-media-position="{{ section.settings.media_position }}"
       data-mobile-media-position="{{ section.settings.mobile_media_position }}"
+      data-details-position="{{ details_position }}"
       data-mode="{{ mode | default: 'featured' }}"
+      data-sticky-info="{{ section.settings.enable_sticky_info }}"
     >
       <div class="ekko-product-showcase__media product__gallery-container">
         {%- if placeholder -%}
@@ -93,12 +118,13 @@
             image_zoom: section.settings.image_zoom,
             image_fill: settings.product_image_fill,
             mobile_layout: section.settings.mobile_layout,
-            mobile_thumbnail: section.settings.mobile_thumbnail,
+            mobile_thumbnail: mobile_thumbnail_enabled,
             hide_variants: section.settings.hide_variants,
             enable_video_autoplay: section.settings.enable_video_autoplay,
             enable_video_looping: section.settings.enable_video_looping,
             first_3d_model: first_3d_model,
-            product_form_id: product_form_id
+            product_form_id: product_form_id,
+            sizes: product_media_sizes
           -%}
         {%- endif -%}
       </div>
@@ -112,8 +138,20 @@
         data-update-url="{% if mode == 'main' %}true{% else %}false{% endif %}"
       >
         {{- blocks_content -}}
+        {%- if mode == 'featured' -%}
+          {%- if placeholder == false -%}
+            {%- if section.settings.show_view_product_link -%}
+              {%- if section.settings.view_product_label != blank -%}
+                <a class="ekko-product-showcase__product-link" href="{{ product_item.url }}">
+                  <span>{{ section.settings.view_product_label | escape }}</span>
+                  {%- render 'icon', icon: 'arrow-right-long', size: 'sm' -%}
+                </a>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endif -%}
       </product-info>
-    </div>
+    </product-showcase-layout>
   </div>
 
   {%- if first_3d_model -%}

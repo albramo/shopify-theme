@@ -1,0 +1,255 @@
+{% doc %}
+  Renders every product feature from a list-of-metaobjects metafield as wrapping capsules.
+
+  Supported metaobject fields are label/title/name, short_label, icon/custom_icon/icon_image,
+  and accent_color/color. The metafield path is always supplied by theme or block settings.
+
+  @param {product} product - Product whose metafield supplies the feature list.
+  @param {string} metafield_path - Metafield namespace and key in namespace.key format.
+  @param {string} [class] - Optional wrapper class.
+  @param {string} [style] - tinted, outline, or neutral.
+  @param {string} [size] - compact, standard, or large.
+  @param {string} [alignment] - left, center, or right.
+  @param {string} [packing] - natural or compact.
+  @param {boolean} [compact_mobile] - Whether compact packing also runs on mobile.
+  @param {boolean} [show_icons] - Whether icons should be rendered.
+  @param {boolean} [use_short_mobile] - Whether short_label replaces label on mobile.
+  @param {boolean} [allow_item_colors] - Whether each metaobject can override the accent color.
+  @param {color} [background] - Capsule background color.
+  @param {color} [text_color] - Capsule text color.
+  @param {color} [icon_color] - Capsule icon color.
+  @param {number} [column_gap] - Horizontal gap in pixels.
+  @param {number} [row_gap] - Vertical gap in pixels.
+  @param {number} [padding_top] - Wrapper top padding in pixels.
+  @param {number} [padding_bottom] - Wrapper bottom padding in pixels.
+  @param {boolean} [show_empty_state] - Show setup guidance in the theme editor.
+{% enddoc %}
+
+{%- liquid
+  assign feature_items = blank
+  if product != blank and metafield_path != blank
+    assign metafield_parts = metafield_path | split: '.'
+    if metafield_parts.size > 1
+      assign metafield_namespace = metafield_parts | first
+      assign metafield_key = metafield_parts | last
+      assign feature_metafield = product.metafields[metafield_namespace][metafield_key]
+      if feature_metafield.value != blank and feature_metafield.list?
+        assign feature_items = feature_metafield.value
+      endif
+    endif
+  endif
+
+  assign feature_count = feature_items.size
+  assign capsule_style = style | default: 'tinted'
+  assign capsule_size = size | default: 'standard'
+  assign capsule_alignment = alignment | default: 'left'
+  assign capsule_packing = packing | default: 'natural'
+  assign capsule_background = background | default: '#FFF0EC'
+  assign capsule_text = text_color | default: '#272727'
+  assign capsule_icon = icon_color | default: '#FF5A3C'
+  assign capsule_column_gap = column_gap | default: 6
+  assign capsule_row_gap = row_gap | default: 6
+  assign capsule_padding_top = padding_top | default: 0
+  assign capsule_padding_bottom = padding_bottom | default: 0
+-%}
+
+{%- if feature_count > 0 -%}
+  <compact-line-packer
+    class="feature-capsules feature-capsules--{{ capsule_style }} feature-capsules--{{ capsule_size }} feature-capsules--align-{{ capsule_alignment }}{% if class != blank %} {{ class }}{% endif %}"
+    data-packing="{{ capsule_packing }}"
+    data-mobile-packing="{{ compact_mobile }}"
+    data-item-selector=".feature-capsule"
+    style="--feature-capsule-background: {{ capsule_background }}; --feature-capsule-text: {{ capsule_text }}; --feature-capsule-icon: {{ capsule_icon }}; --feature-capsule-column-gap: {{ capsule_column_gap }}px; --feature-capsule-row-gap: {{ capsule_row_gap }}px; --feature-capsule-padding-top: {{ capsule_padding_top }}px; --feature-capsule-padding-bottom: {{ capsule_padding_bottom }}px;"
+    role="list"
+  >
+    {%- for item in feature_items -%}
+      {%- liquid
+        assign item_label = item.label.value | default: item.label
+        if item_label == blank
+          assign item_label = item.title.value | default: item.title
+        endif
+        if item_label == blank
+          assign item_label = item.name.value | default: item.name
+        endif
+
+        assign item_short_label = item.short_label.value | default: item.short_label
+        assign item_icon_image = item.custom_icon.value | default: item.custom_icon
+        if item_icon_image == blank
+          assign item_icon_image = item.icon_image.value | default: item.icon_image
+        endif
+
+        assign item_icon_name = item.icon_name.value | default: item.icon_name
+        assign item_icon = item.icon.value | default: item.icon
+        if item_icon_image == blank and item_icon.width != blank
+          assign item_icon_image = item_icon
+        elsif item_icon_name == blank
+          assign item_icon_name = item_icon
+        endif
+
+        assign item_accent = item.accent_color.value | default: item.accent_color
+        if item_accent == blank
+          assign item_accent = item.color.value | default: item.color
+        endif
+      -%}
+      {%- if item_label != blank -%}
+        <span
+          class="feature-capsule{% if item_short_label != blank and use_short_mobile %} feature-capsule--short-mobile{% endif %}{% if allow_item_colors and item_accent != blank %} feature-capsule--custom-accent{% endif %}"
+          role="listitem"
+          {% if allow_item_colors and item_accent != blank %}style="--feature-capsule-item-accent: {{ item_accent }};"{% endif %}
+        >
+          {%- if show_icons -%}
+            {%- if item_icon_image != blank -%}
+              <span class="feature-capsule__icon feature-capsule__icon--image" aria-hidden="true">
+                {{- item_icon_image | image_url: width: 96 | image_tag: loading: 'lazy', widths: '32,48,64,96', sizes: '20px', alt: '' -}}
+              </span>
+            {%- elsif item_icon_name != blank -%}
+              <span class="feature-capsule__icon" aria-hidden="true">
+                {%- render 'feature-capsule-icon', icon: item_icon_name -%}
+              </span>
+            {%- endif -%}
+          {%- endif -%}
+          <span class="feature-capsule__label feature-capsule__label--full">{{ item_label | escape }}</span>
+          {%- if item_short_label != blank and use_short_mobile -%}
+            <span class="feature-capsule__label feature-capsule__label--short">{{ item_short_label | escape }}</span>
+          {%- endif -%}
+        </span>
+      {%- endif -%}
+    {%- endfor -%}
+  </compact-line-packer>
+{%- elsif show_empty_state and request.design_mode -%}
+  <div class="ekko-product-empty-state text-sm text-opacity">
+    {{- 'products.feature_capsules.empty_state' | t -}}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .feature-capsules {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--feature-capsule-row-gap) var(--feature-capsule-column-gap);
+    width: 100%;
+    min-width: 0;
+    padding-block: var(--feature-capsule-padding-top) var(--feature-capsule-padding-bottom);
+  }
+
+  .feature-capsules--align-left { justify-content: flex-start; }
+  .feature-capsules--align-center { justify-content: center; }
+  .feature-capsules--align-right { justify-content: flex-end; }
+
+  .feature-capsule {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: .42rem;
+    max-width: 100%;
+    width: fit-content;
+    min-height: 1.875rem;
+    padding: .36rem .72rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--feature-capsule-background);
+    color: var(--feature-capsule-text);
+    font-size: .8125rem;
+    font-weight: 650;
+    line-height: 1.1;
+    text-align: start;
+  }
+
+  .feature-capsules--compact .feature-capsule {
+    min-height: 1.625rem;
+    gap: .32rem;
+    padding: .28rem .58rem;
+    font-size: .75rem;
+  }
+
+  .feature-capsules--large .feature-capsule {
+    min-height: 2.25rem;
+    gap: .5rem;
+    padding: .48rem .9rem;
+    font-size: .875rem;
+  }
+
+  .feature-capsules--outline .feature-capsule {
+    border-color: color-mix(in srgb, var(--feature-capsule-icon) 42%, transparent);
+    background: transparent;
+  }
+
+  .feature-capsules--neutral .feature-capsule {
+    background: color-mix(in srgb, var(--feature-capsule-text) 7%, transparent);
+  }
+
+  .feature-capsule--custom-accent {
+    --feature-capsule-item-icon: var(--feature-capsule-item-accent);
+  }
+
+  .feature-capsules--tinted .feature-capsule--custom-accent {
+    background: color-mix(in srgb, var(--feature-capsule-item-accent) 10%, var(--feature-capsule-background));
+  }
+
+  .feature-capsules--outline .feature-capsule--custom-accent {
+    border-color: color-mix(in srgb, var(--feature-capsule-item-accent) 55%, transparent);
+  }
+
+  .feature-capsule__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    color: var(--feature-capsule-item-icon, var(--feature-capsule-icon));
+    line-height: 0;
+  }
+
+  .feature-capsules--compact .feature-capsule__icon {
+    width: .875rem;
+    height: .875rem;
+  }
+
+  .feature-capsules--large .feature-capsule__icon {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .feature-capsule__icon svg,
+  .feature-capsule__icon img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .feature-capsule__icon img { object-fit: contain; }
+
+  .feature-capsule__label {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .feature-capsule__label--short { display: none; }
+
+  @media screen and (max-width: 767px) {
+    .feature-capsule {
+      min-height: 1.75rem;
+      gap: .34rem;
+      padding: .31rem .62rem;
+      font-size: .75rem;
+    }
+
+    .feature-capsules--compact .feature-capsule {
+      min-height: 1.5rem;
+      padding: .24rem .5rem;
+      font-size: .6875rem;
+    }
+
+    .feature-capsules--large .feature-capsule {
+      min-height: 2rem;
+      padding: .4rem .75rem;
+      font-size: .8125rem;
+    }
+
+    .feature-capsule--short-mobile .feature-capsule__label--full { display: none; }
+    .feature-capsule--short-mobile .feature-capsule__label--short { display: inline; }
+  }
+{% endstylesheet %}

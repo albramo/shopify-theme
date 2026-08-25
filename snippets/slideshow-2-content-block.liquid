@@ -3,6 +3,7 @@
 
   @param {block} block - The current Theme Block.
   @param {string} content - Captured child markup.
+  @param {boolean} [intrinsic] - Keep the block at its natural width while respecting its configured maximum.
 {% enddoc %}
 
 {%- liquid
@@ -35,7 +36,12 @@
 
 {% style %}
   #shopify-block-{{ block.id }} {
-    width: min(100%, {{ block.settings.width }}%);
+    {% if intrinsic %}
+      width: fit-content;
+      max-width: min(100%, {{ block.settings.width }}%);
+    {% else %}
+      width: min(100%, {{ block.settings.width }}%);
+    {% endif %}
     margin-block-start: {{ block.settings.spacing_top }}px;
     align-self: {{ block.settings.alignment }};
     text-align: {{ text_alignment }};
@@ -72,7 +78,12 @@
 
   @media screen and (max-width: 767px) {
     #shopify-block-{{ block.id }} {
-      width: min(100%, {{ block.settings.width_mobile }}%);
+      {% if intrinsic %}
+        width: fit-content;
+        max-width: min(100%, {{ block.settings.width_mobile }}%);
+      {% else %}
+        width: min(100%, {{ block.settings.width_mobile }}%);
+      {% endif %}
       margin-block-start: {{ block.settings.spacing_top_mobile }}px;
       align-self: {{ block.settings.alignment_mobile }};
       text-align: {{ text_alignment_mobile }};

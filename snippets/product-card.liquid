@@ -58,6 +58,8 @@
     endif
 
     assign hide_rating = true
+    assign rating_position = settings.product_rating_position | default: 'below_price'
+    assign feature_capsules_position = settings.product_feature_capsules_position | default: 'below_title'
     if show_rating
       assign rating_max = 5
 
@@ -77,6 +79,28 @@
       endif
     endif
   -%}
+  {%- capture feature_capsules_markup -%}
+    {%- if settings.product_feature_capsules and settings.product_feature_capsules_metafield != blank -%}
+      {%- render 'product-feature-capsules',
+        product: product,
+        metafield_path: settings.product_feature_capsules_metafield,
+        class: 'product-card__feature-capsules',
+        style: settings.product_feature_capsules_style,
+        size: settings.product_feature_capsules_size,
+        alignment: settings.product_feature_capsules_alignment,
+        packing: settings.product_feature_capsules_packing,
+        compact_mobile: settings.product_feature_capsules_compact_mobile,
+        show_icons: settings.product_feature_capsules_show_icons,
+        use_short_mobile: settings.product_feature_capsules_short_mobile,
+        allow_item_colors: settings.product_feature_capsules_item_colors,
+        background: settings.product_feature_capsules_background,
+        text_color: settings.product_feature_capsules_text,
+        icon_color: settings.product_feature_capsules_icon,
+        column_gap: settings.product_feature_capsules_column_gap,
+        row_gap: settings.product_feature_capsules_row_gap
+      -%}
+    {%- endif -%}
+  {%- endcapture -%}
   <div class="card product-card product-card--{{ settings.card_style }}{% if title_context == 'mega-menu' %} product-card--mega-menu{% endif %}{% if settings.card_border_thickness > 0 %} product-card--thickness{% endif %}{% unless featured_media %} no-media{% endunless %}{% if product.available and show_quick_add and mobile_quick_add %} mobile:with-quick-add{% endif %} flex flex-col leading-none relative"{% if title_context == 'mega-menu' %} style="--product-title-lines: {{ title_lines | default: 2 }};"{% endif %}>
     {%- if featured_media -%}
       <div class="product-card__media relative h-auto">
@@ -266,26 +290,34 @@
       {%- endif -%}
 
       <div class="product-card__details flex flex-col items-stretch gap-2 w-full">
+        {%- if rating_position == 'above_title' -%}
+          {%- unless hide_rating -%}
+            {%- render 'product-rating-stars', rating_value: rating_value, rating_max: rating_max, rating_count: rating_count, display_mode: display_mode -%}
+            {%- if feature_capsules_position == 'below_rating' -%}{{- feature_capsules_markup -}}{%- endif -%}
+          {%- endunless -%}
+        {%- endif -%}
+        {%- if feature_capsules_position == 'above_title' -%}{{- feature_capsules_markup -}}{%- endif -%}
         <p class="product-card__title-row w-full">
           <a class="product-card__title reversed-link text-base-xl font-medium leading-tight" href="{{ product_url }}" aria-label="{{ product.title | escape }}"{% if title_context == 'mega-menu' %} title="{{ product.title | escape }}"{% endif %}>
             {{- display_title | default: product.title | escape -}}
           </a>
         </p>
+        {%- if feature_capsules_position == 'below_title' -%}{{- feature_capsules_markup -}}{%- endif -%}
+        {%- if feature_capsules_position == 'below_rating' and hide_rating -%}{{- feature_capsules_markup -}}{%- endif -%}
+        {%- if rating_position == 'below_title' -%}
+          {%- unless hide_rating -%}
+            {%- render 'product-rating-stars', rating_value: rating_value, rating_max: rating_max, rating_count: rating_count, display_mode: display_mode -%}
+            {%- if feature_capsules_position == 'below_rating' -%}{{- feature_capsules_markup -}}{%- endif -%}
+          {%- endunless -%}
+        {%- endif -%}
         {%- render 'product-price', product: product, class: 'product-card__price-row flex flex-wrap gap-2 md:gap-1d5 w-full' -%}
-        {%- unless hide_rating -%}
-          <div class="rating product-card__rating flex items-center gap-2 md:gap-1d5 w-full pointer-events-none" title="{{ 'general.accessibility.star_reviews_count' | t: count: rating_count | escape }}">
-            <span role="img" aria-label="{{ 'general.accessibility.star_reviews_info' | t: rating_value: rating_value, rating_max: rating_max }}">
-              {%- render 'icon', icon: 'star', size: 'xs' -%}
-            </span>
-            {%- liquid
-              if display_mode == 'count'
-                echo 'general.accessibility.star_reviews_count' | t: count: rating_count
-              else
-                echo rating_value
-              endif
-            -%}
-          </div>
-        {%- endunless -%}
+        {%- if rating_position == 'below_price' -%}
+          {%- unless hide_rating -%}
+            {%- render 'product-rating-stars', rating_value: rating_value, rating_max: rating_max, rating_count: rating_count, display_mode: display_mode -%}
+            {%- if feature_capsules_position == 'below_rating' -%}{{- feature_capsules_markup -}}{%- endif -%}
+          {%- endunless -%}
+        {%- endif -%}
+        {%- if feature_capsules_position == 'below_price' -%}{{- feature_capsules_markup -}}{%- endif -%}
         {%- if product.quantity_price_breaks_configured? -%}
           <div class="product-card__volume-note w-full text-sm font-medium leading-tight">{{ 'products.volume_pricing.note' | t }}</div>
         {%- endif -%}
@@ -362,6 +394,8 @@
           {%- endif -%}
         {%- endfor -%}
       {%- endif -%}
+      {%- if feature_capsules_position == 'below_swatches' -%}{{- feature_capsules_markup -}}{%- endif -%}
+      {%- if feature_capsules_position == 'above_icon_list' -%}{{- feature_capsules_markup -}}{%- endif -%}
     </div>
 
     {%- if show_icon_list -%}
@@ -377,16 +411,30 @@
             assign product_icon_items = product_icon_list_metafield.value
             assign product_icon_limit = settings.product_icon_list_max | default: 4 | at_least: 2
             assign enable_product_icon_carousel = false
+            assign compact_product_icon_list = false
             if settings.product_icon_list_carousel
               assign product_icon_limit = product_icon_items.size
               if product_icon_items.size > 1
                 assign enable_product_icon_carousel = true
               endif
+            elsif settings.product_icon_list_packing == 'compact'
+              assign compact_product_icon_list = true
+              assign product_icon_limit = product_icon_items.size
             endif
             assign product_icon_count = product_icon_items.size | at_most: product_icon_limit
           -%}
-          <scroll-shadow class="product-card__spec block overflow-hidden">
-            <div class="product-card__icons product-card__icons--count-{{ product_icon_count }}{% unless settings.product_icon_list_carousel %} product-card__icons--grid{% endunless %} flex flex-nowrap"{% if enable_product_icon_carousel %} is="icons-carousel" data-speed="{{ settings.product_icon_list_carousel_speed | default: 30 }}"{% endif %}>
+          <div class="product-card__spec block overflow-hidden">
+            {%- if compact_product_icon_list -%}
+              <compact-line-packer
+                class="product-card__icons product-card__icons--compact product-card__icons--align-{{ settings.product_icon_list_alignment | default: 'left' }} flex"
+                data-packing="compact"
+                data-mobile-packing="{{ settings.product_icon_list_compact_mobile }}"
+                data-item-selector=".product-card__icon"
+                style="--product-icon-column-gap: {{ settings.product_icon_list_column_gap | default: 0 }}px; --product-icon-row-gap: {{ settings.product_icon_list_row_gap | default: 0 }}px;"
+              >
+            {%- else -%}
+              <div class="product-card__icons product-card__icons--count-{{ product_icon_count }}{% unless settings.product_icon_list_carousel %} product-card__icons--grid{% endunless %} flex flex-nowrap"{% if enable_product_icon_carousel %} is="icons-carousel" data-speed="{{ settings.product_icon_list_carousel_speed | default: 30 }}"{% endif %}>
+            {%- endif -%}
               {%- for item in product_icon_items limit: product_icon_limit -%}
                 {%- liquid
                   assign item_icon = item.icon.value | default: item.icon
@@ -411,23 +459,8 @@
                   </div>
                 </div>
               {%- endfor -%}
-            </div>
-            <template>
-              <slot></slot>
-              <s dir="{% render 'direction' %}" style="--t: 0; --b: 0; --l: 0; --r: 0;">
-                <span class="l"></span>
-                <span class="r"></span>
-              </s>
-              <style>
-                :host{display:inline-block;position:relative}:host([hidden]){display:none}
-                s{position:absolute;inset:0;pointer-events:none;border-radius:var(--card-shadow-radius);overflow:hidden;}
-                s span{position:absolute;inset-block:0;width:clamp(var(--sp-12),4.73vw,var(--sp-23));opacity:0;transition:opacity var(--animation-short);}
-                s .l{inset-inline-start:0;opacity:var(--l);background:linear-gradient(90deg,rgb(var(--color-background)) 0%,transparent 100%);}
-                s .r{inset-inline-end:0;opacity:var(--r);background:linear-gradient(270deg,rgb(var(--color-background)) 0%,transparent 100%);}
-                s[dir=rtl] :is(.icon-chevron-left,.icon-chevron-right){transform:scaleX(-1);}
-              </style>
-            </template>
-          </scroll-shadow>
+            {%- if compact_product_icon_list -%}</compact-line-packer>{%- else -%}</div>{%- endif -%}
+          </div>
         {%- endif -%}
       {%- endif -%}
     {%- endif -%}

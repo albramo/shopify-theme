@@ -15,6 +15,7 @@
   enable_video_autoplay
   enable_video_looping
   first_3d_model
+  sizes
 {%- endcomment -%}
 
 {%- liquid
@@ -28,7 +29,9 @@
   assign product_variant = product.selected_or_first_available_variant
   assign featured_media = product_variant.featured_media | default: product.featured_media
 -%}
-{%- capture sizes -%}(max-width: 740px) calc(100vw - 40px), (max-width: 999px) calc(100vw - 64px), min(580px, 30vw){%- endcapture -%}
+{%- if sizes == blank -%}
+  {%- capture sizes -%}(max-width: 989px) 100vw, 58vw{%- endcapture -%}
+{%- endif -%}
 
 <media-gallery
   id="ProductGallery-{{ section_id }}-{{ product_id }}"
