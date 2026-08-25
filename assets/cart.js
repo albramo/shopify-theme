@@ -52,10 +52,6 @@ if (!customElements.get('cart-drawer')) {
         return this.getAttribute('data-section-id');
       }
 
-      get renderSectionId() {
-        return this.getAttribute('data-render-section-id') || this.sectionId;
-      }
-
       get shouldAppendToBody() {
         return false;
       }
@@ -86,7 +82,7 @@ if (!customElements.get('cart-drawer')) {
       }
 
       onPrepareBundledSections(event) {
-        event.detail.sections.push(this.renderSectionId);
+        event.detail.sections.push(this.sectionId);
       }
 
       onRecentlyViewedEmpty() {
@@ -103,7 +99,7 @@ if (!customElements.get('cart-drawer')) {
         const id = `MiniCart-${this.sectionId}`;
         if (document.getElementById(id) === null) return;
 
-        const responseText = await (await fetch(`${theme.routes.root_url}?section_id=${this.renderSectionId}`)).text();
+        const responseText = await (await fetch(`${window.location.pathname}?section_id=${encodeURIComponent(this.sectionId)}`)).text();
         const parsedHTML = new DOMParser().parseFromString(responseText, 'text/html');
         const updatedMiniCart = parsedHTML.querySelector('[id^="MiniCart-"]');
 
@@ -169,10 +165,6 @@ if (!customElements.get('cart-items')) {
         return this.getAttribute('data-section-id');
       }
 
-      get renderSectionId() {
-        return this.getAttribute('data-render-section-id') || this.sectionId;
-      }
-
       disconnectedCallback() {
         if (this.cartUpdateUnsubscriber) {
           this.cartUpdateUnsubscriber();
@@ -192,7 +184,7 @@ if (!customElements.get('cart-items')) {
             return;
           }
 
-          const sectionHTML = event.cart.sections?.[this.renderSectionId];
+          const sectionHTML = event.cart.sections?.[this.sectionId];
           if (!sectionHTML) {
             document.dispatchEvent(new CustomEvent('cart:refresh', {
               detail: { open: false }
@@ -223,19 +215,30 @@ if (!customElements.get('cart-items')) {
             }
           }
 
-          const lineItem = document.getElementById(`CartItem-${event.line}`) || document.getElementById(`CartDrawer-Item-${event.line}`);
-          if (lineItem && lineItem.querySelector(`[name="${event.name}"]`)) {
-            theme.a11y.trapFocus(mainCart || miniCart, lineItem.querySelector(`[name="${event.name}"]`));
+          // Section rendering can replace the cart-items element that received
+          // this event. Resolve the live container and focus target only after
+          // the HTML swap so focus trapping never receives stale/null nodes.
+          const currentMiniCart = document.querySelector(`#MiniCart-${this.sectionId}`);
+          const currentMainCart = document.querySelector(`#MainCart-${this.sectionId}`);
+          const lineItem = document.getElementById(`CartItem-${event.line}`)
+            || document.getElementById(`CartDrawer-Item-${event.line}`);
+          const lineItemContainer = lineItem?.closest('[id^="MiniCart-"], [id^="MainCart-"]');
+          const focusContainer = lineItemContainer || currentMainCart || currentMiniCart;
+          const controlName = String(event.name || '');
+          const changedControl = lineItem && controlName
+            ? lineItem.querySelector(`[name="${CSS.escape(controlName)}"]`)
+            : null;
+          let focusTarget = changedControl;
+
+          if (!focusTarget && event.cart.item_count === 0) {
+            focusTarget = focusContainer?.querySelector('.empty-state__link, a, button');
           }
-          else if (event.cart.item_count === 0) {
-            miniCart
-              ? theme.a11y.trapFocus(miniCart, miniCart.querySelector('a'))
-              : theme.a11y.trapFocus(document.querySelector('.empty-state'), document.querySelector('.empty-state__link'));
+          else if (!focusTarget) {
+            focusTarget = focusContainer?.querySelector('.horizontal-product__title, .cart__item-title, a, button');
           }
-          else {
-            miniCart
-              ? theme.a11y.trapFocus(miniCart, miniCart.querySelector('.horizontal-product__title'))
-              : theme.a11y.trapFocus(mainCart, mainCart.querySelector('.cart__item-title'));
+
+          if (focusContainer) {
+            theme.a11y.trapFocus(focusContainer, focusTarget || focusContainer);
           }
 
           document.dispatchEvent(new CustomEvent('cart:updated', {
@@ -551,8 +554,8 @@ if (!customElements.get('shipping-calculator')) {
         // remove double `/` in case shop might have /en or language in URL
         sectionUrl = sectionUrl.replace('//', '/');
 
-        fetch(sectionUrl, { ...theme.utils.fetchConfig('javascript'), ...{ body }, signal: this.abortController.signal })
-          .then((response) => response.json())
+        fetch(sectionUrl, { ...theme.utils.fetchConfig('json'), ...{ body }, signal: this.abortController.signal })
+          .then((response) => theme.utils.parseJsonResponse(response))
           .then((parsedState) => {
             if (parsedState.shipping_rates) {
               this.formatShippingRates(parsedState.shipping_rates);

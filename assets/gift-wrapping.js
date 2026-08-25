@@ -98,7 +98,7 @@ if (!customElements.get('gift-wrapping')) {
 
       fetchGiftWrap(body) {
         fetch(`${theme.routes.cart_update_url}`, { ...theme.utils.fetchConfig(), ...{ body } })
-          .then((response) => response.json())
+          .then((response) => theme.utils.parseJsonResponse(response))
           .then((parsedState) => {
             theme.pubsub.publish(theme.pubsub.PUB_SUB_EVENTS.cartUpdate, { source: 'gift-wrapping', cart: parsedState });
           })
