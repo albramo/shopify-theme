@@ -1,0 +1,1307 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+
+  case section.settings.card_size_desktop
+    when 'compact'
+      assign card_max_width_desktop = 180
+      assign media_height_desktop = 100
+    when 'large'
+      assign card_max_width_desktop = 240
+      assign media_height_desktop = 150
+    when 'custom'
+      assign card_max_width_desktop = section.settings.card_max_width_desktop
+      assign media_height_desktop = section.settings.media_height_desktop
+    else
+      assign card_max_width_desktop = 210
+      assign media_height_desktop = 120
+  endcase
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    --builder-section-background: {{ section.settings.background }};
+    --builder-text: {{ section.settings.text_color }};
+    --builder-panel-background: {{ section.settings.panel_background }};
+    --builder-active-panel-background: {{ section.settings.active_panel_background }};
+    --builder-card-background: {{ section.settings.card_background }};
+    --builder-card-text: {{ section.settings.card_text_color }};
+    --builder-media-background: {{ section.settings.media_background }};
+    --builder-selected-background: {{ section.settings.selected_background }};
+    --builder-selection-color: {{ section.settings.selection_color }};
+    --builder-accent: {{ section.settings.accent_color }};
+    --builder-accent-contrast: {{ section.settings.accent_text_color }};
+    --builder-custom-width: {{ section.settings.custom_content_width }}vw;
+    --builder-header-content-width: {{ section.settings.header_content_width }}%;
+    --builder-columns: {{ section.settings.columns_desktop }};
+    --builder-card-gap: {{ section.settings.card_gap }}px;
+    --builder-card-gap-mobile: {{ section.settings.card_gap_mobile }}px;
+    --builder-mobile-card-width: {{ section.settings.card_width_mobile }}vw;
+    --builder-card-max-width: {{ card_max_width_desktop }}px;
+    --builder-media-height: {{ media_height_desktop }}px;
+    --builder-media-height-mobile: {{ section.settings.media_height_mobile }}px;
+    --builder-image-fit: {{ section.settings.image_fit }};
+    --builder-panel-radius: {{ section.settings.panel_radius }}px;
+    --builder-card-radius: {{ section.settings.card_radius }}px;
+    --builder-padding-top: {{ section.settings.padding_top }}px;
+    --builder-padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+{% endstyle %}
+
+<section class="ekko-product-builder-section">
+  <product-set-builder
+    class="ekko-product-builder"
+    data-exclusive="{{ section.settings.exclusive_accordion }}"
+    data-auto-advance="{{ section.settings.auto_advance }}"
+    data-selected-template="{{ 'sections.product_set_builder.selected_count' | t: count: '[count]' | escape }}"
+    data-limit-template="{{ 'sections.product_set_builder.selection_limit' | t: limit: '[limit]' | escape }}"
+    data-select-message="{{ 'sections.product_set_builder.select_products' | t | escape }}"
+    data-required-message="{{ 'sections.product_set_builder.complete_required' | t | escape }}"
+    data-adding-message="{{ 'sections.product_set_builder.adding' | t | escape }}"
+    data-success-message="{{ 'sections.product_set_builder.added' | t | escape }}"
+    data-error-message="{{ 'sections.product_set_builder.cart_error' | t | escape }}"
+  >
+    <div class="ekko-product-builder__frame {{ frame_class }} ekko-paint-layer" data-width="{{ section.settings.content_width }}">
+      {%- if section.settings.subheading != blank or section.settings.heading != blank or section.settings.description != blank -%}
+        <header class="ekko-product-builder__header" data-alignment="{{ section.settings.heading_alignment }}">
+          {%- if section.settings.subheading != blank -%}
+            <p class="ekko-product-builder__eyebrow">{{ section.settings.subheading | escape }}</p>
+          {%- endif -%}
+          {%- if section.settings.heading != blank -%}
+            <{{ section.settings.heading_tag }} class="ekko-product-builder__heading">{{ section.settings.heading }}</{{ section.settings.heading_tag }}>
+          {%- endif -%}
+          {%- if section.settings.description != blank -%}
+            <div class="ekko-product-builder__description rte">{{ section.settings.description }}</div>
+          {%- endif -%}
+        </header>
+      {%- endif -%}
+
+      <div class="ekko-product-builder__steps" data-builder-steps>
+        {% content_for 'blocks' %}
+      </div>
+
+      <div
+        class="ekko-product-builder__summary"
+        data-builder-summary
+        data-sticky="{{ section.settings.sticky_summary }}"
+      >
+        <div class="ekko-product-builder__summary-copy">
+          <span class="ekko-product-builder__summary-label">{{ section.settings.summary_heading | escape }}</span>
+          <span class="ekko-product-builder__summary-status" data-builder-status role="status" aria-live="polite">
+            {{- 'sections.product_set_builder.select_products' | t -}}
+          </span>
+        </div>
+
+        {%- if section.settings.show_selected_previews -%}
+          <div class="ekko-product-builder__selected" data-builder-selected hidden></div>
+        {%- endif -%}
+
+        <div class="ekko-product-builder__summary-total">
+          <span>{{ 'sections.product_set_builder.total' | t }}</span>
+          <strong data-builder-total>{{ 0 | money }}</strong>
+        </div>
+
+        <button type="button" class="ekko-product-builder__add" data-add-set disabled>
+          <span data-add-label>{{ section.settings.button_label | escape }}</span>
+          <span class="ekko-product-builder__add-count" data-add-count hidden>0</span>
+          {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
+        </button>
+      </div>
+    </div>
+
+    <dialog class="ekko-product-builder__dialog" data-variant-dialog aria-labelledby="BuilderDialogTitle-{{ section.id }}">
+      <div class="ekko-product-builder__dialog-card">
+        <header class="ekko-product-builder__dialog-header">
+          <div>
+            <p class="ekko-product-builder__dialog-eyebrow">{{ 'sections.product_set_builder.choose_options' | t }}</p>
+            <h3 id="BuilderDialogTitle-{{ section.id }}" data-dialog-title></h3>
+          </div>
+          <button type="button" class="ekko-product-builder__dialog-close" data-variant-close aria-label="{{ 'general.accessibility.close' | t | escape }}">
+            {%- render 'icon', icon: 'close', size: 'sm' -%}
+          </button>
+        </header>
+
+        <div class="ekko-product-builder__dialog-loading" data-dialog-loading>
+          <span class="ekko-product-builder__spinner" aria-hidden="true"></span>
+          <span>{{ 'sections.product_set_builder.loading_options' | t }}</span>
+        </div>
+
+        <div class="ekko-product-builder__dialog-content" data-dialog-content hidden>
+          <div class="ekko-product-builder__dialog-product">
+            <div class="ekko-product-builder__dialog-media">
+              <img data-dialog-image alt="" width="320" height="320">
+            </div>
+            <div>
+              <p class="ekko-product-builder__dialog-variant" data-dialog-variant></p>
+              <p class="ekko-product-builder__dialog-price" data-dialog-price></p>
+            </div>
+          </div>
+
+          <div class="ekko-product-builder__dialog-options" data-dialog-options></div>
+          <p class="ekko-product-builder__dialog-error" data-dialog-error role="alert" hidden></p>
+
+          <button type="button" class="ekko-product-builder__dialog-confirm" data-variant-confirm>
+            {{- 'sections.product_set_builder.confirm_selection' | t -}}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  </product-set-builder>
+</section>
+
+{% stylesheet %}
+  .ekko-product-builder-section {
+    position: relative;
+    overflow: clip;
+    padding-block: var(--builder-padding-top) var(--builder-padding-bottom);
+    color: var(--builder-text);
+    background: var(--builder-section-background);
+  }
+
+  .ekko-product-builder,
+  .ekko-product-builder__frame { display: block; width: 100%; }
+
+  .ekko-product-builder__frame[data-width='custom'] {
+    width: min(100%, var(--builder-custom-width));
+    max-width: var(--builder-custom-width);
+    margin-inline: auto;
+  }
+
+  .ekko-product-builder__header {
+    display: grid;
+    width: min(100%, var(--builder-header-content-width));
+    margin-block-end: clamp(2rem, 4vw, 3.75rem);
+    gap: .75rem;
+  }
+
+  .ekko-product-builder__header[data-alignment='center'] { margin-inline: auto; justify-items: center; text-align: center; }
+  .ekko-product-builder__header[data-alignment='right'] { margin-inline-start: auto; justify-items: end; text-align: right; }
+
+  .ekko-product-builder__eyebrow {
+    margin: 0;
+    color: color-mix(in srgb, var(--builder-text) 62%, transparent);
+    font-size: .72rem;
+    font-weight: 750;
+    letter-spacing: .15em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .ekko-product-builder__heading {
+    margin: 0;
+    color: inherit;
+    font-family: var(--font-heading-family);
+    font-size: clamp(2.25rem, 5vw, 5rem);
+    font-weight: var(--font-heading-weight);
+    letter-spacing: -.045em;
+    line-height: .98;
+    text-wrap: balance;
+  }
+
+  .ekko-product-builder__description {
+    width: 100%;
+    max-width: none;
+    color: color-mix(in srgb, var(--builder-text) 68%, transparent);
+    font-size: clamp(.95rem, 1.2vw, 1.1rem);
+    line-height: 1.55;
+  }
+
+  .ekko-product-builder__description > :first-child { margin-top: 0; }
+  .ekko-product-builder__description > :last-child { margin-bottom: 0; }
+
+  .ekko-product-builder__steps {
+    display: grid;
+    counter-reset: builder-step;
+    gap: .75rem;
+  }
+
+  .ekko-product-builder__summary {
+    z-index: 5;
+    display: grid;
+    width: min(100%, 44rem);
+    margin: 1.25rem auto 0;
+    padding: .6rem .7rem .6rem .85rem;
+    grid-template-columns: minmax(12rem, 1fr) auto auto auto;
+    gap: clamp(.65rem, 1.5vw, 1rem);
+    align-items: center;
+    border-radius: var(--builder-panel-radius);
+    color: var(--builder-card-text);
+    background: var(--builder-active-panel-background);
+  }
+
+  .ekko-product-builder__summary[data-sticky='true'] {
+    position: sticky;
+    width: min(100%, 36rem);
+    margin-inline: auto 0;
+    bottom: 1rem;
+  }
+
+  .ekko-product-builder__summary[data-sticky='true'] .ekko-product-builder__selected { display: none; }
+
+  .ekko-product-builder__summary-copy { display: grid; min-width: 0; gap: .2rem; }
+
+  .ekko-product-builder__summary-label {
+    font-family: var(--font-heading-family);
+    font-size: 1rem;
+    font-weight: var(--font-heading-weight);
+    line-height: 1.2;
+  }
+
+  .ekko-product-builder__summary-status {
+    overflow: hidden;
+    color: color-mix(in srgb, var(--builder-card-text) 62%, transparent);
+    font-size: .76rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ekko-product-builder__summary-status.is-error { color: #b42318; }
+
+  .ekko-product-builder__selected { display: flex; padding-inline-start: .5rem; }
+  .ekko-product-builder__selected[hidden],
+  .ekko-product-builder__add-count[hidden] { display: none !important; }
+
+  .ekko-product-builder__selected img {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-inline-start: -.5rem;
+    object-fit: cover;
+    border: 3px solid var(--builder-active-panel-background);
+    border-radius: 50%;
+    background: var(--builder-media-background);
+  }
+
+  .ekko-product-builder__summary-total { display: grid; gap: .15rem; text-align: right; white-space: nowrap; }
+
+  .ekko-product-builder__summary-total span {
+    color: color-mix(in srgb, var(--builder-card-text) 58%, transparent);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .ekko-product-builder__summary-total strong { font-size: .98rem; font-variant-numeric: tabular-nums; }
+
+  .ekko-product-builder__add,
+  .ekko-product-builder__dialog-confirm {
+    display: inline-flex;
+    min-height: 2.65rem;
+    padding: .65rem 1rem;
+    gap: .65rem;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    color: var(--builder-accent-contrast);
+    background: var(--builder-accent);
+    cursor: pointer;
+    font-size: .86rem;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  .ekko-product-builder__add:disabled,
+  .ekko-product-builder__dialog-confirm:disabled { cursor: default; opacity: .42; }
+
+  .ekko-product-builder__add-count {
+    display: grid;
+    min-width: 1.45rem;
+    height: 1.45rem;
+    padding-inline: .3rem;
+    place-items: center;
+    border-radius: 999px;
+    color: var(--builder-accent);
+    background: var(--builder-accent-contrast);
+    font-size: .7rem;
+  }
+
+  .ekko-product-builder__dialog {
+    width: min(92vw, 38rem);
+    max-width: 38rem;
+    max-height: min(88dvh, 52rem);
+    margin: auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: var(--builder-panel-radius);
+    color: var(--builder-card-text);
+    background: transparent;
+  }
+
+  .ekko-product-builder__dialog::backdrop {
+    background: color-mix(in srgb, #000 48%, transparent);
+    backdrop-filter: blur(3px);
+  }
+
+  .ekko-product-builder__dialog-card {
+    max-height: min(88dvh, 52rem);
+    padding: clamp(1.25rem, 3vw, 2rem);
+    overflow-y: auto;
+    border-radius: var(--builder-panel-radius);
+    background: var(--builder-card-background);
+  }
+
+  .ekko-product-builder__dialog-header {
+    display: flex;
+    margin-block-end: 1.5rem;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .ekko-product-builder__dialog-eyebrow {
+    margin: 0 0 .35rem;
+    color: color-mix(in srgb, var(--builder-card-text) 58%, transparent);
+    font-size: .68rem;
+    font-weight: 750;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .ekko-product-builder__dialog-header h3 { margin: 0; font-size: clamp(1.35rem, 3vw, 2rem); line-height: 1.1; }
+
+  .ekko-product-builder__dialog-close {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: inherit;
+    background: color-mix(in srgb, var(--builder-card-text) 7%, transparent);
+    cursor: pointer;
+  }
+
+  .ekko-product-builder__dialog-loading {
+    display: flex;
+    min-height: 12rem;
+    gap: .75rem;
+    align-items: center;
+    justify-content: center;
+    color: color-mix(in srgb, var(--builder-card-text) 64%, transparent);
+    font-size: .85rem;
+  }
+
+  .ekko-product-builder__dialog-loading[hidden] { display: none !important; }
+
+  .ekko-product-builder__spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid color-mix(in srgb, var(--builder-card-text) 16%, transparent);
+    border-top-color: var(--builder-accent);
+    border-radius: 50%;
+    animation: ekko-builder-spin .75s linear infinite;
+  }
+
+  @keyframes ekko-builder-spin { to { transform: rotate(360deg); } }
+
+  .ekko-product-builder__dialog-content { display: grid; gap: 1.25rem; }
+  .ekko-product-builder__dialog-content[hidden] { display: none; }
+
+  .ekko-product-builder__dialog-product {
+    display: grid;
+    padding: .75rem;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+    border-radius: calc(var(--builder-card-radius) * .7);
+    background: var(--builder-media-background);
+  }
+
+  .ekko-product-builder__dialog-media {
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: calc(var(--builder-card-radius) * .5);
+    background: var(--builder-card-background);
+  }
+
+  .ekko-product-builder__dialog-media img { width: 100%; height: 100%; object-fit: contain; }
+  .ekko-product-builder__dialog-variant { margin: 0; font-size: .85rem; font-weight: 700; line-height: 1.3; }
+  .ekko-product-builder__dialog-price { margin: .35rem 0 0; font-size: .9rem; font-weight: 750; }
+  .ekko-product-builder__dialog-options { display: grid; gap: 1.15rem; }
+
+  .ekko-product-builder__dialog-option { margin: 0; padding: 0; border: 0; }
+
+  .ekko-product-builder__dialog-option legend {
+    margin-block-end: .6rem;
+    font-size: .78rem;
+    font-weight: 750;
+  }
+
+  .ekko-product-builder__dialog-values { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+  .ekko-product-builder__dialog-value {
+    min-height: 2.5rem;
+    padding: .55rem .85rem;
+    border: 0;
+    border-radius: 999px;
+    color: inherit;
+    background: color-mix(in srgb, var(--builder-card-text) 7%, transparent);
+    cursor: pointer;
+    font-size: .78rem;
+    font-weight: 650;
+  }
+
+  .ekko-product-builder__dialog-value[aria-pressed='true'] {
+    color: var(--builder-accent-contrast);
+    background: var(--builder-accent);
+  }
+
+  .ekko-product-builder__dialog-value:disabled { cursor: default; opacity: .35; text-decoration: line-through; }
+
+  .ekko-product-builder__dialog-error {
+    margin: 0;
+    color: #b42318;
+    font-size: .8rem;
+    line-height: 1.4;
+  }
+
+  .ekko-product-builder__dialog-confirm { width: 100%; }
+
+  @media screen and (max-width: 767px) {
+    .ekko-product-builder__header { margin-block-end: 1.75rem; }
+    .ekko-product-builder__heading { font-size: clamp(2rem, 10vw, 3.25rem); }
+
+    .ekko-product-builder__summary {
+      bottom: calc(var(--mobile-dock-height, 0px) + .75rem);
+      width: calc(100% - 1rem);
+      margin-block-start: 1rem;
+      padding: .65rem .65rem .65rem .85rem;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: .65rem .9rem;
+    }
+
+    .ekko-product-builder__summary[data-sticky='true'] {
+      width: calc(100% - 1rem);
+      margin-inline: auto;
+    }
+
+    .ekko-product-builder__selected { display: none; }
+    .ekko-product-builder__summary-total { grid-column: 1; grid-row: 2; text-align: left; }
+    .ekko-product-builder__summary-total span { display: none; }
+    .ekko-product-builder__add { grid-column: 2; grid-row: 1 / span 2; min-height: 3.25rem; }
+    .ekko-product-builder__add .icon { display: none; }
+    .ekko-product-builder__dialog { width: 100%; max-width: 100%; max-height: 88dvh; margin: auto 0 0; }
+    .ekko-product-builder__dialog-card { max-height: 88dvh; border-radius: var(--builder-panel-radius) var(--builder-panel-radius) 0 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-product-builder__spinner { animation: none; }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('product-set-builder')) {
+    customElements.define('product-set-builder', class ProductSetBuilder extends HTMLElement {
+      connectedCallback() {
+        this.steps = Array.from(this.querySelectorAll('[data-builder-step]'));
+        this.summary = this.querySelector('[data-builder-summary]');
+        this.status = this.querySelector('[data-builder-status]');
+        this.total = this.querySelector('[data-builder-total]');
+        this.selectedPreview = this.querySelector('[data-builder-selected]');
+        this.addButton = this.querySelector('[data-add-set]');
+        this.addLabel = this.querySelector('[data-add-label]');
+        this.addCount = this.querySelector('[data-add-count]');
+        this.dialog = this.querySelector('[data-variant-dialog]');
+        this.dialogLoading = this.querySelector('[data-dialog-loading]');
+        this.dialogContent = this.querySelector('[data-dialog-content]');
+        this.dialogTitle = this.querySelector('[data-dialog-title]');
+        this.dialogImage = this.querySelector('[data-dialog-image]');
+        this.dialogVariant = this.querySelector('[data-dialog-variant]');
+        this.dialogPrice = this.querySelector('[data-dialog-price]');
+        this.dialogOptions = this.querySelector('[data-dialog-options]');
+        this.dialogError = this.querySelector('[data-dialog-error]');
+        this.dialogConfirm = this.querySelector('[data-variant-confirm]');
+        this.productCache = new Map();
+        this.defaultAddLabel = this.addLabel?.textContent || '';
+        this.currentCard = null;
+        this.currentProduct = null;
+        this.currentVariant = null;
+        this.modalSelections = [];
+        this.scrollListeners = [];
+        this.stepTransitions = new WeakMap();
+        this.editorSelectionGuard = null;
+        this.autoAdvanceTimer = null;
+
+        this.onClick = this.handleClick.bind(this);
+        this.onPointerDown = this.handlePointerDown.bind(this);
+        this.onBlockSelect = this.handleBlockSelect.bind(this);
+        this.addEventListener('click', this.onClick);
+        this.addEventListener('pointerdown', this.onPointerDown);
+        document.addEventListener('shopify:block:select', this.onBlockSelect);
+
+        this.prepareAccordion();
+        this.prepareStepCarousels();
+        if ('ResizeObserver' in window) {
+          this.lastObservedWidth = this.getBoundingClientRect().width;
+          this.resizeObserver = new ResizeObserver((entries) => {
+            const nextWidth = entries[0]?.contentRect.width || 0;
+            if (Math.abs(nextWidth - this.lastObservedWidth) < 1) return;
+            this.lastObservedWidth = nextWidth;
+            this.steps.forEach((step) => this.updateStepCarousel(step));
+          });
+          this.resizeObserver.observe(this);
+        }
+        this.updateState();
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('click', this.onClick);
+        this.removeEventListener('pointerdown', this.onPointerDown);
+        this.scrollListeners?.forEach(({ viewport, listener }) => viewport.removeEventListener('scroll', listener));
+        this.steps?.forEach((step) => this.cancelStepTransition(step));
+        window.clearTimeout(this.autoAdvanceTimer);
+        this.resizeObserver?.disconnect();
+        document.removeEventListener('shopify:block:select', this.onBlockSelect);
+      }
+
+      prepareAccordion() {
+        const requestedOpen = this.steps.filter((step) => step.open || step.dataset.expanded === 'true');
+        const activeStep = requestedOpen[0] || this.steps[0];
+
+        this.steps.forEach((step) => {
+          const expanded = this.dataset.exclusive === 'true'
+            ? step === activeStep
+            : step.open || step.dataset.expanded === 'true';
+          this.setStepExpanded(step, expanded, { immediate: true });
+        });
+      }
+
+      prepareStepCarousels() {
+        this.steps.forEach((step) => {
+          const viewport = step.querySelector('[data-step-viewport]');
+          if (!viewport) return;
+          const listener = () => this.updateStepCarousel(step);
+          viewport.addEventListener('scroll', listener, { passive: true });
+          this.scrollListeners.push({ viewport, listener });
+          requestAnimationFrame(listener);
+        });
+      }
+
+      handlePointerDown(event) {
+        const summary = event.target.closest('.ekko-builder-step__summary');
+        if (!summary || !this.contains(summary)) return;
+        this.editorSelectionGuard = {
+          step: summary.closest('[data-builder-step]'),
+          expires: performance.now() + 750
+        };
+      }
+
+      handleBlockSelect(event) {
+        const target = event.target;
+        const step = target.matches?.('[data-builder-step]')
+          ? target
+          : target.querySelector?.('[data-builder-step]') || target.closest?.('[data-builder-step]');
+        if (!step || !this.contains(step)) return;
+
+        if (
+          this.editorSelectionGuard?.step === step
+          && performance.now() < this.editorSelectionGuard.expires
+        ) {
+          return;
+        }
+
+        window.clearTimeout(this.autoAdvanceTimer);
+        this.expandStep(step);
+      }
+
+      handleClick(event) {
+        const stepSummary = event.target.closest('.ekko-builder-step__summary');
+        if (stepSummary && this.contains(stepSummary)) {
+          event.preventDefault();
+          const step = stepSummary.closest('[data-builder-step]');
+          this.editorSelectionGuard = { step, expires: performance.now() + 750 };
+          this.toggleStep(step);
+          return;
+        }
+
+        const closeButton = event.target.closest('[data-variant-close]');
+        if (closeButton) {
+          this.closeVariantDialog();
+          return;
+        }
+
+        if (event.target === this.dialog) {
+          this.closeVariantDialog();
+          return;
+        }
+
+        const optionButton = event.target.closest('[data-dialog-option-value]');
+        if (optionButton) {
+          this.selectDialogOption(optionButton);
+          return;
+        }
+
+        if (event.target.closest('[data-variant-confirm]')) {
+          this.confirmVariant();
+          return;
+        }
+
+        if (event.target.closest('[data-add-set]')) {
+          this.addSetToCart();
+          return;
+        }
+
+        const navigationButton = event.target.closest('[data-step-previous], [data-step-next]');
+        if (navigationButton) {
+          const step = navigationButton.closest('[data-builder-step]');
+          const viewport = step?.querySelector('[data-step-viewport]');
+          if (!viewport) return;
+          const direction = navigationButton.hasAttribute('data-step-previous') ? -1 : 1;
+          viewport.scrollBy({ left: direction * viewport.clientWidth * .82, behavior: 'smooth' });
+          return;
+        }
+
+        const changeButton = event.target.closest('[data-change-options]');
+        if (changeButton) {
+          this.openVariantDialog(changeButton.closest('[data-builder-card]'));
+          return;
+        }
+
+        const action = event.target.closest('[data-card-action]');
+        if (!action) return;
+        const card = action.closest('[data-builder-card]');
+        if (!card || card.dataset.available !== 'true') return;
+
+        if (card.classList.contains('is-selected')) {
+          this.setCardSelected(card, false);
+        } else if (card.dataset.hasVariants === 'true') {
+          this.openVariantDialog(card);
+        } else {
+          this.setCardSelected(card, true);
+        }
+      }
+
+      toggleStep(step) {
+        if (!step) return;
+        window.clearTimeout(this.autoAdvanceTimer);
+        const willExpand = step.dataset.expansionTarget !== 'true';
+        if (willExpand) this.expandStep(step);
+        else this.setStepExpanded(step, false);
+      }
+
+      expandStep(step, options = {}) {
+        if (!step) return;
+        if (this.dataset.exclusive === 'true') {
+          this.steps.forEach((otherStep) => {
+            if (otherStep !== step) this.setStepExpanded(otherStep, false, options);
+          });
+        }
+        this.setStepExpanded(step, true, options);
+      }
+
+      setStepExpanded(step, expanded, { immediate = false } = {}) {
+        if (!step) return;
+        const body = step.querySelector('.ekko-builder-step__body');
+        const summary = step.querySelector('.ekko-builder-step__summary');
+        const wasOpen = step.open;
+        const currentTarget = step.dataset.expansionTarget === 'true';
+
+        if (!immediate && step.dataset.expansionTarget != null && currentTarget === expanded) {
+          summary?.setAttribute('aria-expanded', String(expanded));
+          if (expanded) requestAnimationFrame(() => this.updateStepCarousel(step));
+          return;
+        }
+
+        this.cancelStepTransition(step);
+        step.dataset.expansionTarget = String(expanded);
+        summary?.setAttribute('aria-expanded', String(expanded));
+
+        if (immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          step.dataset.expanded = String(expanded);
+          step.toggleAttribute('open', expanded);
+          if (expanded) requestAnimationFrame(() => this.updateStepCarousel(step));
+          return;
+        }
+
+        if (expanded) {
+          if (currentTarget && wasOpen && step.dataset.expanded === 'true') {
+            requestAnimationFrame(() => this.updateStepCarousel(step));
+            return;
+          }
+
+          step.setAttribute('open', '');
+          if (wasOpen) {
+            step.dataset.expanded = 'true';
+            requestAnimationFrame(() => this.updateStepCarousel(step));
+            return;
+          }
+
+          step.dataset.expanded = 'false';
+          body?.getBoundingClientRect();
+          const frame = requestAnimationFrame(() => {
+            if (step.dataset.expansionTarget !== 'true') return;
+            step.dataset.expanded = 'true';
+            this.stepTransitions.delete(step);
+            this.updateStepCarousel(step);
+          });
+          this.stepTransitions.set(step, { frame });
+          return;
+        }
+
+        step.dataset.expanded = 'false';
+        if (!wasOpen) {
+          step.removeAttribute('open');
+          return;
+        }
+
+        const finish = (event) => {
+          if (event && (event.target !== body || event.propertyName !== 'grid-template-rows')) return;
+          if (step.dataset.expansionTarget === 'false') step.removeAttribute('open');
+          this.cancelStepTransition(step);
+        };
+        const duration = this.getTransitionDuration(body);
+        if (duration === 0) {
+          if (step.dataset.expansionTarget === 'false') step.removeAttribute('open');
+          return;
+        }
+        body?.addEventListener('transitionend', finish);
+        const timer = window.setTimeout(() => finish(), duration + 100);
+        this.stepTransitions.set(step, { body, finish, timer });
+      }
+
+      cancelStepTransition(step) {
+        const transition = this.stepTransitions?.get(step);
+        if (!transition) return;
+        if (transition.frame) cancelAnimationFrame(transition.frame);
+        if (transition.timer) window.clearTimeout(transition.timer);
+        if (transition.body && transition.finish) {
+          transition.body.removeEventListener('transitionend', transition.finish);
+        }
+        this.stepTransitions.delete(step);
+      }
+
+      getTransitionDuration(element) {
+        if (!element) return 0;
+        const style = getComputedStyle(element);
+        const durations = style.transitionDuration.split(',').map((value) => this.timeToMilliseconds(value));
+        const delays = style.transitionDelay.split(',').map((value) => this.timeToMilliseconds(value));
+        return durations.reduce((longest, duration, index) => {
+          const delay = delays[index % delays.length] || 0;
+          return Math.max(longest, duration + delay);
+        }, 0);
+      }
+
+      timeToMilliseconds(value) {
+        const time = Number.parseFloat(value) || 0;
+        return value.trim().endsWith('ms') ? time : time * 1000;
+      }
+
+      getThemeMotionDuration(property, fallback) {
+        const value = getComputedStyle(this).getPropertyValue(property).trim();
+        if (!value) return fallback;
+        const duration = this.timeToMilliseconds(value.split(/\s+/)[0]);
+        return duration || fallback;
+      }
+
+      setCardSelected(card, selected, allowAdvance = true) {
+        const step = card.closest('[data-builder-step]');
+        if (!step) return;
+
+        if (selected && step.dataset.selectionMode === 'single') {
+          step.querySelectorAll('[data-builder-card].is-selected').forEach((otherCard) => {
+            if (otherCard !== card) this.applyCardSelection(otherCard, false);
+          });
+        }
+
+        if (selected && step.dataset.selectionMode === 'multiple') {
+          const selectedCount = step.querySelectorAll('[data-builder-card].is-selected').length;
+          const limit = Number(step.dataset.selectionLimit || 1);
+          if (!card.classList.contains('is-selected') && selectedCount >= limit) {
+            this.setStatus((this.dataset.limitTemplate || 'Select up to [limit] items.').replace('[limit]', limit), true);
+            return;
+          }
+        }
+
+        this.applyCardSelection(card, selected);
+        this.updateState();
+
+        if (selected && allowAdvance && step.dataset.selectionMode === 'single' && this.dataset.autoAdvance === 'true') {
+          const stepIndex = this.steps.indexOf(step);
+          const nextStep = this.steps[stepIndex + 1];
+          if (nextStep) {
+            window.clearTimeout(this.autoAdvanceTimer);
+            const delay = this.getThemeMotionDuration('--animation-short', 200);
+            this.autoAdvanceTimer = window.setTimeout(() => {
+              this.autoAdvanceTimer = null;
+              if (!this.isConnected || !card.classList.contains('is-selected')) return;
+              this.expandStep(nextStep);
+            }, delay);
+          }
+        }
+      }
+
+      applyCardSelection(card, selected) {
+        card.classList.toggle('is-selected', selected);
+        card.querySelector('[data-builder-choice]').checked = selected;
+        card.querySelectorAll('[data-card-action]').forEach((button) => {
+          button.setAttribute('aria-pressed', String(selected));
+          if (!button.classList.contains('ekko-builder-card__select')) return;
+          button.textContent = selected
+            ? button.dataset.labelSelected
+            : card.dataset.hasVariants === 'true'
+              ? button.dataset.labelChoose
+              : button.dataset.labelSelect;
+        });
+        const changeButton = card.querySelector('[data-change-options]');
+        if (changeButton) {
+          changeButton.hidden = false;
+          changeButton.textContent = selected
+            ? changeButton.dataset.labelChange
+            : changeButton.dataset.labelChoose;
+        }
+      }
+
+      updateState() {
+        const selectedCards = Array.from(this.querySelectorAll('[data-builder-card].is-selected'));
+        const total = selectedCards.reduce((sum, card) => sum + Number(card.dataset.price || 0), 0);
+        const requiredComplete = this.steps
+          .filter((step) => step.dataset.required === 'true')
+          .every((step) => step.querySelector('[data-builder-card].is-selected'));
+
+        this.steps.forEach((step) => this.updateStepSelection(step));
+        if (this.total) this.total.innerHTML = this.formatMoney(total);
+        if (this.addCount) {
+          this.addCount.textContent = selectedCards.length;
+          this.addCount.hidden = selectedCards.length === 0;
+        }
+        if (this.addButton) this.addButton.disabled = selectedCards.length === 0 || !requiredComplete;
+        this.updateSelectedPreview(selectedCards);
+
+        if (selectedCards.length === 0) this.setStatus(this.dataset.selectMessage || 'Select products to build your set.');
+        else if (!requiredComplete) this.setStatus(this.dataset.requiredMessage || 'Complete the required steps.');
+        else this.setStatus((this.dataset.selectedTemplate || '[count] selected').replace('[count]', selectedCards.length));
+      }
+
+      updateStepSelection(step) {
+        const selectedCards = Array.from(step.querySelectorAll('[data-builder-card].is-selected'));
+        const selection = step.querySelector('[data-step-selection]');
+        const images = step.querySelector('[data-step-selection-images]');
+        const label = step.querySelector('[data-step-selection-label]');
+        if (!selection || !images || !label) return;
+
+        images.replaceChildren();
+        selectedCards.slice(0, 3).forEach((card) => {
+          if (!card.dataset.imageUrl) return;
+          const image = document.createElement('img');
+          image.src = card.dataset.imageUrl;
+          image.alt = '';
+          image.width = 40;
+          image.height = 40;
+          images.append(image);
+        });
+        label.textContent = (this.dataset.selectedTemplate || '[count] selected').replace('[count]', selectedCards.length);
+        selection.hidden = selectedCards.length === 0;
+      }
+
+      updateSelectedPreview(selectedCards) {
+        if (!this.selectedPreview) return;
+        this.selectedPreview.replaceChildren();
+        selectedCards.slice(0, 5).forEach((card) => {
+          if (!card.dataset.imageUrl) return;
+          const image = document.createElement('img');
+          image.src = card.dataset.imageUrl;
+          image.alt = card.dataset.productTitle || '';
+          image.width = 48;
+          image.height = 48;
+          this.selectedPreview.append(image);
+        });
+        this.selectedPreview.hidden = selectedCards.length === 0;
+      }
+
+      updateStepCarousel(step) {
+        const viewport = step?.querySelector('[data-step-viewport]');
+        const navigation = step?.querySelector('[data-step-navigation]');
+        const progress = step?.querySelector('[data-step-progress]');
+        const previous = step?.querySelector('[data-step-previous]');
+        const next = step?.querySelector('[data-step-next]');
+        if (!viewport) return;
+        const maximum = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        const current = Math.max(0, viewport.scrollLeft);
+        if (navigation) navigation.hidden = maximum <= 2;
+        const visibleProgress = viewport.scrollWidth > 0
+          ? Math.min(1, (current + viewport.clientWidth) / viewport.scrollWidth)
+          : 1;
+        if (progress) progress.style.transform = `scaleX(${visibleProgress})`;
+        if (previous) previous.disabled = current <= 2;
+        if (next) next.disabled = current >= maximum - 2;
+      }
+
+      async openVariantDialog(card) {
+        if (!card || !this.dialog) return;
+        this.currentCard = card;
+        this.dialogLoading.hidden = false;
+        this.dialogContent.hidden = true;
+        this.dialogError.hidden = true;
+        this.dialogTitle.textContent = card.dataset.productTitle || '';
+        if (typeof this.dialog.showModal === 'function') this.dialog.showModal();
+        else this.dialog.setAttribute('open', '');
+
+        try {
+          const product = this.getEmbeddedProduct(card) || await this.loadProduct(card.dataset.productUrl);
+          this.renderVariantDialog(product, card.dataset.variantId);
+        } catch (error) {
+          this.dialogLoading.hidden = true;
+          this.dialogContent.hidden = false;
+          this.dialogError.hidden = false;
+          this.dialogError.textContent = error?.message || this.dataset.errorMessage;
+          this.dialogConfirm.disabled = true;
+        }
+      }
+
+      closeVariantDialog() {
+        if (!this.dialog) return;
+        if (typeof this.dialog.close === 'function') this.dialog.close();
+        else this.dialog.removeAttribute('open');
+      }
+
+      getEmbeddedProduct(card) {
+        const source = card?.querySelector('[data-builder-product-json]');
+        if (!source?.textContent) return null;
+        try {
+          return JSON.parse(source.textContent);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      async loadProduct(productUrl) {
+        if (this.productCache.has(productUrl)) return this.productCache.get(productUrl);
+        const url = new URL(productUrl, window.location.origin);
+        url.pathname = `${url.pathname.replace(/\.js$/, '')}.js`;
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8000);
+        try {
+          const response = await fetch(url.toString(), {
+            headers: { Accept: 'application/json' },
+            signal: controller.signal
+          });
+          if (!response.ok) throw new Error(this.dataset.errorMessage || 'Unable to load product options.');
+          const product = await response.json();
+          this.productCache.set(productUrl, product);
+          return product;
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      }
+
+      renderVariantDialog(product, variantId) {
+        this.currentProduct = product;
+        const variants = Array.isArray(product.variants) ? product.variants : [];
+        const initialVariant = variants.find((variant) => String(variant.id) === String(variantId))
+          || variants.find((variant) => variant.available)
+          || variants[0];
+        this.currentVariant = initialVariant;
+        this.modalSelections = Array.from(initialVariant?.options || []);
+        this.dialogTitle.textContent = product.title || this.currentCard?.dataset.productTitle || '';
+        this.dialogOptions.replaceChildren();
+
+        this.getProductOptions(product).forEach((option, optionIndex) => {
+          const fieldset = document.createElement('fieldset');
+          fieldset.className = 'ekko-product-builder__dialog-option';
+          const legend = document.createElement('legend');
+          legend.textContent = option.name;
+          const values = document.createElement('div');
+          values.className = 'ekko-product-builder__dialog-values';
+
+          option.values.forEach((value) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'ekko-product-builder__dialog-value';
+            button.dataset.dialogOptionValue = value;
+            button.dataset.optionIndex = optionIndex;
+            button.textContent = value;
+            values.append(button);
+          });
+          fieldset.append(legend, values);
+          this.dialogOptions.append(fieldset);
+        });
+
+        this.dialogLoading.hidden = true;
+        this.dialogContent.hidden = false;
+        this.updateVariantDialog();
+      }
+
+      getProductOptions(product) {
+        const variants = Array.isArray(product.variants) ? product.variants : [];
+        return Array.from(product.options || []).map((option, optionIndex) => {
+          if (typeof option === 'string') {
+            return {
+              name: option,
+              values: [...new Set(variants.map((variant) => variant.options?.[optionIndex]).filter(Boolean))]
+            };
+          }
+          return {
+            name: option.name || `Option ${optionIndex + 1}`,
+            values: Array.from(option.values || [...new Set(variants.map((variant) => variant.options?.[optionIndex]).filter(Boolean))])
+          };
+        });
+      }
+
+      selectDialogOption(button) {
+        const optionIndex = Number(button.dataset.optionIndex);
+        const optionValue = button.dataset.dialogOptionValue;
+        this.modalSelections[optionIndex] = optionValue;
+        const variants = this.currentProduct?.variants || [];
+        let selectedVariant = variants.find((variant) =>
+          variant.options?.every((value, index) => value === this.modalSelections[index])
+        );
+        if (!selectedVariant?.available) {
+          selectedVariant = variants.find((variant) => variant.available && variant.options?.[optionIndex] === optionValue)
+            || selectedVariant;
+          if (selectedVariant?.available) this.modalSelections = Array.from(selectedVariant.options || []);
+        }
+        this.currentVariant = selectedVariant;
+        this.updateVariantDialog();
+      }
+
+      updateVariantDialog() {
+        const variants = this.currentProduct?.variants || [];
+        this.dialogOptions.querySelectorAll('[data-dialog-option-value]').forEach((button) => {
+          const optionIndex = Number(button.dataset.optionIndex);
+          const value = button.dataset.dialogOptionValue;
+          const possible = variants.some((variant) => variant.available && variant.options?.[optionIndex] === value);
+          button.disabled = !possible;
+          button.setAttribute('aria-pressed', String(this.modalSelections[optionIndex] === value));
+        });
+
+        const variant = this.currentVariant;
+        const imageSource = variant?.featured_image?.src || variant?.featured_image || this.currentProduct?.featured_image;
+        this.dialogVariant.textContent = variant?.title || '';
+        this.dialogPrice.innerHTML = variant ? this.formatMoney(Number(variant.price || 0)) : '';
+        if (imageSource) {
+          this.dialogImage.src = imageSource;
+          this.dialogImage.alt = this.currentProduct?.title || '';
+          this.dialogImage.hidden = false;
+        } else {
+          this.dialogImage.hidden = true;
+        }
+        this.dialogError.hidden = true;
+        this.dialogConfirm.disabled = !variant?.available;
+      }
+
+      confirmVariant() {
+        if (!this.currentCard || !this.currentVariant?.available) return;
+        const wasSelected = this.currentCard.classList.contains('is-selected');
+        this.updateCardVariant(this.currentCard, this.currentVariant);
+        this.setCardSelected(this.currentCard, true, !wasSelected);
+        this.closeVariantDialog();
+      }
+
+      updateCardVariant(card, variant) {
+        const imageSource = variant.featured_image?.src || variant.featured_image;
+        card.dataset.variantId = variant.id;
+        card.dataset.variantTitle = variant.title || '';
+        card.dataset.price = Number(variant.price || 0);
+        card.dataset.comparePrice = Number(variant.compare_at_price || 0);
+        card.dataset.available = String(Boolean(variant.available));
+        card.querySelector('[data-builder-choice]').value = variant.id;
+
+        const price = card.querySelector('[data-card-price]');
+        const comparePrice = card.querySelector('[data-card-compare-price]');
+        const variantTitle = card.querySelector('[data-card-variant-title]');
+        if (price) price.innerHTML = this.formatMoney(Number(variant.price || 0));
+        if (comparePrice) {
+          comparePrice.innerHTML = this.formatMoney(Number(variant.compare_at_price || 0));
+          comparePrice.hidden = !(Number(variant.compare_at_price || 0) > Number(variant.price || 0));
+        }
+        if (variantTitle) {
+          variantTitle.textContent = variant.title || '';
+          variantTitle.hidden = !variant.title || variant.title === 'Default Title';
+        }
+        if (imageSource) {
+          const image = card.querySelector('.ekko-builder-card__image');
+          if (image) {
+            image.src = imageSource;
+            image.removeAttribute('srcset');
+          }
+          card.dataset.imageUrl = imageSource;
+        }
+      }
+
+      async waitForCartMutation() {
+        window.theme = window.theme || {};
+        theme.cartMutationState = theme.cartMutationState || { inFlight: false };
+        const startedAt = Date.now();
+        while (theme.cartMutationState.inFlight) {
+          if (Date.now() - startedAt > 8000) throw new Error(this.dataset.errorMessage);
+          await new Promise((resolve) => window.setTimeout(resolve, 80));
+        }
+      }
+
+      async addSetToCart() {
+        const selectedCards = Array.from(this.querySelectorAll('[data-builder-card].is-selected'));
+        if (!selectedCards.length || this.addButton?.disabled) return;
+        const itemsByVariant = new Map();
+        selectedCards.forEach((card) => {
+          const id = Number(card.dataset.variantId);
+          if (!id) return;
+          itemsByVariant.set(id, (itemsByVariant.get(id) || 0) + 1);
+        });
+        const items = Array.from(itemsByVariant, ([id, quantity]) => ({ id, quantity }));
+        if (!items.length) return;
+
+        this.addButton.disabled = true;
+        this.addButton.setAttribute('aria-busy', 'true');
+        this.addLabel.textContent = this.dataset.addingMessage || 'Adding...';
+        this.setStatus(this.dataset.addingMessage || 'Adding...');
+        let finalMessage = '';
+        let finalMessageIsError = false;
+
+        try {
+          await this.waitForCartMutation();
+          theme.cartMutationState.inFlight = true;
+          const sections = [];
+          document.documentElement.dispatchEvent(new CustomEvent('cart:bundled-sections', {
+            bubbles: true,
+            detail: { sections }
+          }));
+          const body = JSON.stringify({ items, sections, sections_url: window.location.pathname });
+          const config = theme.utils?.fetchConfig?.('json') || {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' }
+          };
+          config.body = body;
+          const response = await fetch(theme.routes?.cart_add_url || `${window.Shopify?.routes?.root || '/'}cart/add.js`, config);
+          const parsedState = theme.utils?.parseJsonResponse
+            ? await theme.utils.parseJsonResponse(response)
+            : await response.json();
+          if (!response.ok || parsedState.status) {
+            throw new Error(parsedState.description || parsedState.message || this.dataset.errorMessage);
+          }
+
+          if (document.body.classList.contains('template-cart') || theme.settings?.cartType === 'page') {
+            window.location.href = theme.routes?.cart_url || `${window.Shopify?.routes?.root || '/'}cart`;
+            return;
+          }
+
+          const cartJson = theme.utils?.cartStateFromResponse
+            ? theme.utils.cartStateFromResponse(parsedState)
+            : parsedState;
+          try {
+            theme.pubsub?.publish(theme.pubsub.PUB_SUB_EVENTS.cartUpdate, {
+              source: 'product-set-builder',
+              cart: cartJson
+            });
+          } catch (renderError) {
+            console.error(renderError);
+            document.dispatchEvent(new CustomEvent('cart:refresh', { detail: { open: true } }));
+          }
+          document.dispatchEvent(new CustomEvent('ajaxProduct:added', { detail: { product: parsedState } }));
+          document.querySelector('cart-drawer')?.show(this.addButton);
+          this.addLabel.textContent = this.dataset.successMessage || 'Added to cart';
+          finalMessage = this.dataset.successMessage || 'Added to cart';
+          window.setTimeout(() => {
+            if (this.addLabel) this.addLabel.textContent = this.defaultAddLabel;
+          }, 1800);
+        } catch (error) {
+          console.error(error);
+          this.addLabel.textContent = this.defaultAddLabel;
+          finalMessage = error?.message || this.dataset.errorMessage || 'Unable to add this set.';
+          finalMessageIsError = true;
+          document.dispatchEvent(new CustomEvent('ajaxProduct:error', {
+            detail: { errorMessage: error?.message || this.dataset.errorMessage }
+          }));
+        } finally {
+          theme.cartMutationState.inFlight = false;
+          this.addButton.removeAttribute('aria-busy');
+          this.updateState();
+          if (finalMessage) this.setStatus(finalMessage, finalMessageIsError);
+        }
+      }
+
+      setStatus(message, isError = false) {
+        if (!this.status) return;
+        this.status.textContent = message || '';
+        this.status.classList.toggle('is-error', isError);
+      }
+
+      formatMoney(cents) {
+        if (window.theme?.Currency?.formatMoney) {
+          const format = theme.settings?.currencyCodeEnabled
+            ? theme.settings.moneyWithCurrencyFormat
+            : theme.settings?.moneyFormat;
+          return theme.Currency.formatMoney(cents, format);
+        }
+        return new Intl.NumberFormat(document.documentElement.lang || 'en', {
+          style: 'currency',
+          currency: window.Shopify?.currency?.active || 'USD'
+        }).format(cents / 100);
+      }
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.product_set_builder.name",
+  "tag": "section",
+  "class": "shopify-section--product-set-builder",
+  "blocks": [{ "type": "_product-builder-step" }],
+  "settings": [
+    { "type": "header", "content": "t:sections.product_set_builder.header" },
+    { "type": "text", "id": "subheading", "label": "t:sections.product_set_builder.subheading", "default": "Build your look" },
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.product_set_builder.heading", "default": "Create a set that feels like you" },
+    { "type": "select", "id": "heading_tag", "label": "t:sections.product_set_builder.heading_tag", "options": [{ "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }, { "value": "p", "label": "P" }], "default": "h2" },
+    { "type": "richtext", "id": "description", "label": "t:sections.product_set_builder.description", "default": "<p>Choose one piece from each step and add the complete set to your cart.</p>" },
+    { "type": "text_alignment", "id": "heading_alignment", "label": "t:sections.product_set_builder.heading_alignment", "default": "left" },
+    { "type": "range", "id": "header_content_width", "label": "t:sections.product_set_builder.header_content_width", "min": 40, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "header", "content": "t:sections.product_set_builder.behavior" },
+    { "type": "checkbox", "id": "exclusive_accordion", "label": "t:sections.product_set_builder.exclusive_accordion", "default": true },
+    { "type": "checkbox", "id": "auto_advance", "label": "t:sections.product_set_builder.auto_advance", "default": false },
+    { "type": "checkbox", "id": "sticky_summary", "label": "t:sections.product_set_builder.sticky_summary", "default": true },
+    { "type": "checkbox", "id": "show_selected_previews", "label": "t:sections.product_set_builder.show_selected_previews", "default": true },
+    { "type": "text", "id": "summary_heading", "label": "t:sections.product_set_builder.summary_heading", "default": "Your set" },
+    { "type": "text", "id": "button_label", "label": "t:sections.product_set_builder.button_label", "default": "Add set to cart" },
+    { "type": "header", "content": "t:sections.product_set_builder.products" },
+    { "type": "select", "id": "desktop_layout", "label": "t:sections.product_set_builder.desktop_layout", "options": [{ "value": "grid", "label": "t:sections.product_set_builder.grid" }, { "value": "carousel", "label": "t:sections.product_set_builder.carousel" }], "default": "grid" },
+    { "type": "range", "id": "columns_desktop", "label": "t:sections.product_set_builder.columns_desktop", "min": 2, "max": 6, "step": 1, "default": 6 },
+    { "type": "select", "id": "card_size_desktop", "label": "t:sections.product_set_builder.card_size_desktop", "options": [{ "value": "compact", "label": "t:sections.product_set_builder.card_size_compact" }, { "value": "standard", "label": "t:sections.product_set_builder.card_size_standard" }, { "value": "large", "label": "t:sections.product_set_builder.card_size_large" }, { "value": "custom", "label": "t:sections.product_set_builder.card_size_custom" }], "default": "standard" },
+    { "type": "range", "id": "card_width_mobile", "label": "t:sections.product_set_builder.card_width_mobile", "min": 68, "max": 88, "step": 2, "unit": "%", "default": 76 },
+    { "type": "range", "id": "card_max_width_desktop", "label": "t:sections.product_set_builder.card_max_width_desktop", "min": 160, "max": 280, "step": 10, "unit": "px", "default": 210, "visible_if": "{{ section.settings.card_size_desktop == 'custom' }}" },
+    { "type": "range", "id": "media_height_desktop", "label": "t:sections.product_set_builder.media_height_desktop", "min": 100, "max": 220, "step": 10, "unit": "px", "default": 120, "visible_if": "{{ section.settings.card_size_desktop == 'custom' }}" },
+    { "type": "range", "id": "media_height_mobile", "label": "t:sections.product_set_builder.media_height_mobile", "min": 120, "max": 240, "step": 10, "unit": "px", "default": 160 },
+    { "type": "select", "id": "image_fit", "label": "t:sections.product_set_builder.image_fit", "options": [{ "value": "contain", "label": "t:sections.product_set_builder.contain" }, { "value": "cover", "label": "t:sections.product_set_builder.cover" }], "default": "contain" },
+    { "type": "checkbox", "id": "show_vendor", "label": "t:sections.product_set_builder.show_vendor", "default": false },
+    { "type": "checkbox", "id": "show_swatches", "label": "t:sections.product_set_builder.show_swatches", "default": true },
+    { "type": "range", "id": "card_gap", "label": "t:sections.product_set_builder.card_gap", "min": 8, "max": 32, "step": 2, "unit": "px", "default": 16 },
+    { "type": "range", "id": "card_gap_mobile", "label": "t:sections.product_set_builder.card_gap_mobile", "min": 8, "max": 24, "step": 2, "unit": "px", "default": 12 },
+    { "type": "range", "id": "panel_radius", "label": "t:sections.product_set_builder.panel_radius", "min": 0, "max": 36, "step": 2, "unit": "px", "default": 16 },
+    { "type": "range", "id": "card_radius", "label": "t:sections.product_set_builder.card_radius", "min": 0, "max": 32, "step": 2, "unit": "px", "default": 16 },
+    { "type": "header", "content": "t:sections.product_set_builder.layout" },
+    { "type": "select", "id": "content_width", "label": "t:sections.product_set_builder.content_width", "options": [{ "value": "page", "label": "t:sections.product_set_builder.page_width" }, { "value": "full", "label": "t:sections.product_set_builder.full_width" }, { "value": "custom", "label": "t:sections.product_set_builder.custom_width" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "t:sections.product_set_builder.custom_content_width", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+    { "type": "header", "content": "t:sections.product_set_builder.colors" },
+    { "type": "color", "id": "background", "label": "t:sections.product_set_builder.background", "default": "#FFFFFF" },
+    { "type": "color", "id": "text_color", "label": "t:sections.product_set_builder.text_color", "default": "#171717" },
+    { "type": "color", "id": "panel_background", "label": "t:sections.product_set_builder.panel_background", "default": "#F4F4F2" },
+    { "type": "color", "id": "active_panel_background", "label": "t:sections.product_set_builder.active_panel_background", "default": "#F0F1EE" },
+    { "type": "color", "id": "card_background", "label": "t:sections.product_set_builder.card_background", "default": "#FFFFFF" },
+    { "type": "color", "id": "card_text_color", "label": "t:sections.product_set_builder.card_text_color", "default": "#171717" },
+    { "type": "color", "id": "media_background", "label": "t:sections.product_set_builder.media_background", "default": "#ECEFED" },
+    { "type": "color", "id": "selected_background", "label": "t:sections.product_set_builder.selected_background", "default": "#EEF5EF" },
+    { "type": "color", "id": "selection_color", "label": "t:sections.product_set_builder.selection_color", "default": "#1F5D3A" },
+    { "type": "color", "id": "accent_color", "label": "t:sections.product_set_builder.accent_color", "default": "#171717" },
+    { "type": "color", "id": "accent_text_color", "label": "t:sections.product_set_builder.accent_text_color", "default": "#FFFFFF" },
+    { "type": "header", "content": "t:sections.product_set_builder.spacing" },
+    { "type": "range", "id": "padding_top", "label": "t:sections.product_set_builder.padding_top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 },
+    { "type": "range", "id": "padding_bottom", "label": "t:sections.product_set_builder.padding_bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.product_set_builder.name",
+      "blocks": [
+        { "type": "_product-builder-step", "settings": { "heading": "Choose your main piece", "description": "Start with the item that defines the set.", "feature_1": "Easy to match", "feature_2": "Everyday comfort", "open_by_default": true } },
+        { "type": "_product-builder-step", "settings": { "heading": "Add the perfect match", "description": "Choose a complementary second piece.", "feature_1": "Made to pair", "feature_2": "Flexible fit" } },
+        { "type": "_product-builder-step", "settings": { "heading": "Finish with an extra", "description": "Add an optional finishing touch.", "feature_1": "Final detail", "feature_2": "Gift ready", "required": false } }
+      ]
+    }
+  ]
+}
+{% endschema %}

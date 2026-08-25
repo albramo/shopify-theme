@@ -19,13 +19,43 @@
     assign with_gradient = true
   endif
 
-  assign show_view_all = false
-  if section.settings.show_view_all and section.blocks.size < collections.size
-    assign show_view_all = true
+  assign show_view_all = section.settings.show_view_all
+  assign view_all_label = section.settings.view_all_label
+  if view_all_label == blank
+    assign view_all_label = 'sections.collection_list.view_all' | t
   endif
 
   assign desktop_gap_total = section.settings.columns | minus: 1 | times: section.settings.gap
   assign mobile_gap_total = section.settings.columns_mobile | minus: 1 | times: section.settings.gap_mobile
+
+  capture desktop_image_size
+    case section.settings.content_width
+      when 'full'
+        echo 'calc((100vw - ' | append: desktop_gap_total | append: 'px) / ' | append: section.settings.columns | append: ')'
+      when 'custom'
+        echo 'calc((' | append: section.settings.custom_content_width | append: 'vw - ' | append: desktop_gap_total | append: 'px) / ' | append: section.settings.columns | append: ')'
+      else
+        echo 'calc((min(' | append: settings.page_width | append: 'px, 100vw) - ' | append: desktop_gap_total | append: 'px) / ' | append: section.settings.columns | append: ')'
+    endcase
+  endcapture
+
+  capture mobile_image_size
+    if section.settings.swipe_on_mobile
+      if section.settings.columns_mobile == '1' or section.settings.mobile_card_layout == 'horizontal'
+        echo section.settings.mobile_card_width | append: 'vw'
+      else
+        echo '50vw'
+      endif
+    elsif section.settings.columns_mobile == '2'
+      echo '50vw'
+    else
+      echo '100vw'
+    endif
+  endcapture
+
+  capture collection_card_sizes
+    echo '(max-width: 989px) ' | append: mobile_image_size | append: ', ' | append: desktop_image_size
+  endcapture
 -%}
 
 <section
@@ -60,6 +90,8 @@
     data-mobile-card-layout="{{ section.settings.mobile_card_layout }}"
     data-card-presentation="{{ section.settings.card_presentation }}"
     data-card-alignment="{{ section.settings.card_content_alignment }}"
+    data-columns="{{ section.settings.columns }}"
+    data-feature-first="{{ section.settings.feature_first_card }}"
     data-reveal="{{ section.settings.reveal_on_scroll }}"
   >
     <div class="ekko-collection-list__frame {{ frame_class }}">
@@ -86,8 +118,8 @@
 
           <div class="ekko-collection-list__actions">
             {%- if show_view_all -%}
-              <a class="ekko-collection-list__view-all" href="{{ routes.collections_url }}">
-                <span>{{ 'sections.collection_list.view_all' | t }}</span>
+              <a class="ekko-collection-list__view-all" href="{{ section.settings.view_all_link | default: routes.collections_url }}">
+                <span>{{ view_all_label | escape }}</span>
                 {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
               </a>
             {%- endif -%}
@@ -109,30 +141,47 @@
         <div class="ekko-collection-list__track" data-carousel-track>
           {%- for block in section.blocks -%}
             {%- liquid
-              assign collection = block.settings.collection
+              assign collection = blank
               assign card_image = block.settings.image
-              if card_image == blank and collection != blank
-                if section.settings.image_source == 'collection' and collection.image != blank
-                  assign card_image = collection.image
-                elsif collection.products.first.featured_media.preview_image != blank
-                  assign card_image = collection.products.first.featured_media.preview_image
-                elsif collection.image != blank
-                  assign card_image = collection.image
+              assign card_title = block.settings.title
+              assign card_description = block.settings.description
+              assign card_label = block.settings.label
+              assign card_url = blank
+              assign card_count_text = blank
+              assign card_image_alt = block.settings.image_alt
+
+              if block.type == 'collection'
+                assign collection = block.settings.collection
+                if card_image == blank and collection != blank
+                  if section.settings.image_source == 'collection' and collection.image != blank
+                    assign card_image = collection.image
+                  elsif collection.products.first.featured_media.preview_image != blank
+                    assign card_image = collection.products.first.featured_media.preview_image
+                  elsif collection.image != blank
+                    assign card_image = collection.image
+                  endif
+                endif
+                if card_title == blank and collection != blank
+                  assign card_title = collection.title
+                endif
+                if collection != blank
+                  assign card_url = collection.url
+                  if section.settings.show_products_count and collection.all_products_count > 0
+                    assign card_count_text = 'sections.collection_list.items_count' | t: count: collection.all_products_count
+                  endif
+                endif
+              else
+                assign card_url = block.settings.link
+                if section.settings.show_products_count
+                  assign card_count_text = block.settings.count_text
                 endif
               endif
 
-              assign card_title = block.settings.title
-              if card_title == blank and collection != blank
-                assign card_title = collection.title
-              endif
               if card_title == blank
                 assign card_title = 'onboarding.collection_title' | t
               endif
-
-              assign card_description = block.settings.description
-              assign card_url = routes.collections_url
-              if collection != blank
-                assign card_url = collection.url
+              if card_image_alt == blank
+                assign card_image_alt = card_image.alt | default: card_title
               endif
 
               assign media_ratio = 1
@@ -166,15 +215,23 @@
               data-carousel-item
               {{ block.shopify_attributes }}
             >
-              <a class="ekko-collection-card__link" href="{{ card_url }}" aria-label="{{ card_title | escape }}">
+              <a
+                class="ekko-collection-card__link{% if card_url == blank %} ekko-collection-card__link--disabled{% endif %}"
+                {% if card_url != blank %}
+                  href="{{ card_url }}"
+                  aria-label="{{ card_title | escape }}"
+                {% else %}
+                  aria-disabled="true"
+                {% endif %}
+              >
                 <div class="ekko-collection-card__media">
                   {%- if card_image != blank -%}
-                    {{ card_image | image_url: width: 1800 | image_tag:
+                    {{ card_image | image_url: width: 3000 | image_tag:
                       loading: 'lazy',
-                      widths: '240, 360, 480, 640, 800, 960, 1200, 1500, 1800',
-                      sizes: '(max-width: 767px) 85vw, 33vw',
+                      widths: '360, 600, 900, 1200, 1800, 2400, 3000',
+                      sizes: collection_card_sizes,
                       class: 'ekko-collection-card__image',
-                      alt: card_image.alt | default: card_title
+                      alt: card_image_alt
                     }}
                   {%- else -%}
                     {%- liquid
@@ -188,20 +245,26 @@
 
                 <div class="ekko-collection-card__content">
                   <div class="ekko-collection-card__copy">
+                    {%- if card_label != blank or card_count_text != blank -%}
+                      <div class="ekko-collection-card__meta">
+                        {%- if card_label != blank -%}<span class="ekko-collection-card__label">{{ card_label | escape }}</span>{%- endif -%}
+                        {%- if card_count_text != blank -%}<span class="ekko-collection-card__count">{{ card_count_text | escape }}</span>{%- endif -%}
+                      </div>
+                    {%- endif -%}
                     <h3 class="ekko-collection-card__title">
                       <span>{{ card_title | escape }}</span>
-                      {%- if section.settings.show_products_count and collection.all_products_count > 0 -%}
-                        <sup>{{ collection.all_products_count }}</sup>
-                      {%- endif -%}
                     </h3>
                     {%- if card_description != blank -%}
                       <div class="ekko-collection-card__description">{{ card_description }}</div>
                     {%- endif -%}
                   </div>
-                  {%- if section.settings.show_arrow -%}
-                    <span class="ekko-collection-card__arrow" aria-hidden="true">
-                      {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
-                    </span>
+                  {%- if card_url != blank -%}
+                    {%- if section.settings.card_link_label != blank or section.settings.show_arrow -%}
+                      <span class="ekko-collection-card__cta" aria-hidden="true">
+                        {%- if section.settings.card_link_label != blank -%}<span>{{ section.settings.card_link_label | escape }}</span>{%- endif -%}
+                        {%- if section.settings.show_arrow -%}{%- render 'icon', icon: 'arrow-right', size: 'sm' -%}{%- endif -%}
+                      </span>
+                    {%- endif -%}
                   {%- endif -%}
                 </div>
               </a>
@@ -211,8 +274,8 @@
       </div>
 
       {%- if show_view_all -%}
-        <a class="ekko-collection-list__view-all ekko-collection-list__view-all--mobile" href="{{ routes.collections_url }}">
-          <span>{{ 'sections.collection_list.view_all' | t }}</span>
+        <a class="ekko-collection-list__view-all ekko-collection-list__view-all--mobile" href="{{ section.settings.view_all_link | default: routes.collections_url }}">
+          <span>{{ view_all_label | escape }}</span>
           {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
         </a>
       {%- endif -%}
@@ -320,38 +383,50 @@
     gap: var(--ekko-collection-list-gap);
   }
 
-  .ekko-collection-card { min-width: 0; border-radius: var(--ekko-collection-list-radius); }
-  .ekko-collection-card--surface,
-  .ekko-collection-card--editorial { background: var(--ekko-collection-list-card-surface); }
-  .ekko-collection-card__link { display: flex; flex-direction: column; width: 100%; height: 100%; color: inherit; text-decoration: none; }
+  .ekko-collection-card {
+    min-width: 0;
+    height: 100%;
+    overflow: hidden;
+    color: inherit;
+    background: var(--ekko-collection-list-card-surface);
+    border-radius: var(--ekko-collection-list-radius);
+    transition: transform 350ms cubic-bezier(.2, .7, .2, 1);
+  }
+  .ekko-collection-card__link {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+  .ekko-collection-card__link--disabled { cursor: default; }
   .ekko-collection-card__media {
     position: relative;
+    width: 100%;
     aspect-ratio: var(--ekko-collection-card-ratio);
     overflow: hidden;
     background: rgb(var(--color-foreground) / .06);
-    border-radius: var(--ekko-collection-list-radius);
-  }
-  .ekko-collection-card--surface:not(.ekko-collection-card--overlay) .ekko-collection-card__media {
-    border-end-start-radius: 0;
-    border-end-end-radius: 0;
+    border-radius: var(--ekko-collection-list-radius) var(--ekko-collection-list-radius) 0 0;
   }
   .ekko-collection-card--editorial:not(.ekko-collection-card--overlay) .ekko-collection-card__media {
     width: calc(100% - 1.5rem);
     margin: .75rem .75rem 0;
+    border-radius: max(0px, calc(var(--ekko-collection-list-radius) - .375rem));
   }
   .ekko-collection-card__image,
   .ekko-collection-card__placeholder { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 700ms cubic-bezier(.2, .7, .2, 1); }
   .ekko-collection-card__shade { position: absolute; inset: 0; background: rgb(var(--ekko-collection-card-overlay)); }
   .ekko-collection-card__content {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-block: 1.25rem .5rem;
+    flex: 1;
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(1.25rem, 2vw, 2rem);
+    padding: clamp(1.25rem, 2.2vw, 1.75rem);
     color: inherit;
   }
-  .ekko-collection-card--surface:not(.ekko-collection-card--overlay) .ekko-collection-card__content { padding: 1.25rem; }
-  .ekko-collection-card--editorial:not(.ekko-collection-card--overlay) .ekko-collection-card__content { padding: 1rem 1.25rem 1.35rem; }
+  .ekko-collection-card--editorial:not(.ekko-collection-card--overlay) .ekko-collection-card__content { padding-block-start: 1.125rem; }
   .ekko-collection-card--overlay .ekko-collection-card__content {
     position: absolute;
     inset: auto 0 0;
@@ -361,41 +436,77 @@
   }
   .ekko-collection-card--overlay .ekko-collection-card__link { position: relative; }
   .ekko-collection-card--overlay .ekko-collection-card__media { height: 100%; }
-  .ekko-collection-card__copy { display: grid; gap: .5rem; min-width: 0; }
-  .ekko-collection-card__title {
+  .ekko-collection-card__copy { display: grid; gap: .625rem; min-width: 0; }
+  .ekko-collection-card__meta {
     display: flex;
-    align-items: flex-start;
-    gap: .4rem;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem .75rem;
+    min-height: 1.25rem;
+    font-size: .6875rem;
+    font-weight: 650;
+    letter-spacing: .09em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .ekko-collection-card__label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    padding-inline: .625rem;
+    border-radius: 999px;
+    color: rgb(var(--color-background));
+    background: rgb(var(--color-foreground));
+  }
+  .ekko-collection-card__count { opacity: .58; }
+  .ekko-collection-card__title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     margin: 0;
     font-family: var(--font-heading-family);
-    font-size: clamp(1.25rem, 2.2vw, 2rem);
+    font-size: clamp(1.25rem, 1.7vw, 1.875rem);
     font-weight: var(--font-heading-weight, 600);
     letter-spacing: -.025em;
-    line-height: 1.05;
+    line-height: 1.08;
   }
-  .ekko-collection-card__title sup { font-family: var(--font-body-family); font-size: .625rem; letter-spacing: 0; opacity: .6; }
-  .ekko-collection-card__description { font-size: .875rem; line-height: 1.4; opacity: .72; }
-  .ekko-collection-card__arrow {
-    display: inline-grid;
-    place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    flex: none;
-    border-radius: 50%;
-    background: rgb(var(--color-foreground) / .08);
-    transition: transform 250ms ease, background-color 250ms ease;
+  .ekko-collection-card__description {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    font-size: .875rem;
+    line-height: 1.5;
+    opacity: .7;
   }
-  .ekko-collection-card--overlay .ekko-collection-card__arrow { background: rgb(var(--ekko-collection-card-text) / .15); }
+  .ekko-collection-card__description > :first-child { margin-block-start: 0; }
+  .ekko-collection-card__description > :last-child { margin-block-end: 0; }
+  .ekko-collection-card__cta {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: .625rem;
+    margin-block-start: auto;
+    font-size: .8125rem;
+    font-weight: 650;
+    line-height: 1.2;
+  }
+  .ekko-collection-card__cta .icon { transition: transform 250ms ease; }
 
-  .ekko-collection-list[data-card-alignment='center'] .ekko-collection-card__content { justify-content: center; text-align: center; }
+  .ekko-collection-list[data-card-alignment='center'] .ekko-collection-card__content { text-align: center; }
   .ekko-collection-list[data-card-alignment='center'] .ekko-collection-card__copy { justify-items: center; }
-  .ekko-collection-list[data-card-alignment='right'] .ekko-collection-card__content { flex-direction: row-reverse; text-align: end; }
+  .ekko-collection-list[data-card-alignment='center'] .ekko-collection-card__meta { justify-content: center; }
+  .ekko-collection-list[data-card-alignment='center'] .ekko-collection-card__cta { align-self: center; }
+  .ekko-collection-list[data-card-alignment='right'] .ekko-collection-card__content { text-align: end; }
   .ekko-collection-list[data-card-alignment='right'] .ekko-collection-card__copy { justify-items: end; }
+  .ekko-collection-list[data-card-alignment='right'] .ekko-collection-card__meta { justify-content: flex-end; }
+  .ekko-collection-list[data-card-alignment='right'] .ekko-collection-card__cta { align-self: flex-end; }
 
   @media screen and (pointer: fine) {
     .ekko-collection-card__link:hover .ekko-collection-card__image,
     .ekko-collection-card__link:hover .ekko-collection-card__placeholder { transform: scale(1.045); }
-    .ekko-collection-card__link:hover .ekko-collection-card__arrow { transform: translateX(.25rem); }
+    .ekko-collection-card__link:hover .ekko-collection-card__cta .icon { transform: translateX(.25rem); }
   }
 
   @media screen and (min-width: 990px) {
@@ -412,6 +523,32 @@
       grid-auto-columns: calc((100% - var(--ekko-collection-list-gap-total)) / var(--ekko-collection-list-columns));
     }
     .ekko-collection-list[data-carousel-desktop='true'] .ekko-collection-card { scroll-snap-align: start; }
+
+    .ekko-collection-list[data-feature-first='true'][data-carousel-desktop='false']:not([data-columns='1']) .ekko-collection-card:first-child {
+      grid-column: span 2;
+    }
+    .ekko-collection-list[data-feature-first='true'][data-carousel-desktop='false']:not([data-columns='1']) .ekko-collection-card:first-child:not(.ekko-collection-card--overlay) .ekko-collection-card__link {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(15rem, .8fr);
+    }
+    .ekko-collection-list[data-feature-first='true'][data-carousel-desktop='false']:not([data-columns='1']) .ekko-collection-card:first-child:not(.ekko-collection-card--overlay) .ekko-collection-card__media {
+      width: 100%;
+      height: 100%;
+      min-height: 22rem;
+      margin: 0;
+      aspect-ratio: auto;
+      border-radius: var(--ekko-collection-list-radius) 0 0 var(--ekko-collection-list-radius);
+    }
+    .ekko-collection-list[data-feature-first='true'][data-carousel-desktop='false']:not([data-columns='1']) .ekko-collection-card:first-child.ekko-collection-card--editorial .ekko-collection-card__media {
+      width: calc(100% - .75rem);
+      height: calc(100% - 1.5rem);
+      min-height: calc(22rem - 1.5rem);
+      margin: .75rem 0 .75rem .75rem;
+      border-radius: max(0px, calc(var(--ekko-collection-list-radius) - .375rem));
+    }
+    .ekko-collection-list[data-feature-first='true'][data-carousel-desktop='false']:not([data-columns='1']) .ekko-collection-card:first-child .ekko-collection-card__content {
+      padding: clamp(1.5rem, 3vw, 2.5rem);
+    }
   }
 
   @media screen and (max-width: 989px) {
@@ -442,12 +579,10 @@
     }
     .ekko-collection-list[data-swipe-mobile='true'] .ekko-collection-card { scroll-snap-align: start; }
 
-    .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card__content { gap: .625rem; padding-block: .75rem .25rem; }
-    .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card--surface:not(.ekko-collection-card--overlay) .ekko-collection-card__content,
-    .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card--editorial:not(.ekko-collection-card--overlay) .ekko-collection-card__content { padding: .875rem; }
+    .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card__content { gap: .875rem; padding: .875rem; }
     .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card__title { font-size: 1.05rem; }
     .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card__description { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: .75rem; }
-    .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card__arrow { width: 1.875rem; height: 1.875rem; }
+    .ekko-collection-list[data-mobile-card-layout='compact'] .ekko-collection-card__cta { font-size: .75rem; }
 
     .ekko-collection-list[data-mobile-card-layout='horizontal']:not([data-swipe-mobile='true']) .ekko-collection-list__track { grid-template-columns: 1fr; }
     .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card:not(.ekko-collection-card--overlay) .ekko-collection-card__link {
@@ -464,11 +599,17 @@
       border-start-end-radius: 0;
       border-end-end-radius: 0;
     }
-    .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card--minimal:not(.ekko-collection-card--overlay) .ekko-collection-card__link { border-radius: var(--ekko-collection-list-radius); }
-    .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card:not(.ekko-collection-card--overlay) .ekko-collection-card__content { align-items: center; padding: 1rem; }
+    .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card--editorial:not(.ekko-collection-card--overlay) .ekko-collection-card__media {
+      width: calc(100% - .625rem);
+      height: calc(100% - 1.25rem);
+      min-height: calc(9rem - 1.25rem);
+      margin: .625rem 0 .625rem .625rem;
+      border-radius: max(0px, calc(var(--ekko-collection-list-radius) - .375rem));
+    }
+    .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card:not(.ekko-collection-card--overlay) .ekko-collection-card__content { padding: 1rem; }
     .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card__title { font-size: clamp(1.05rem, 5vw, 1.35rem); }
     .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card__description { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: .75rem; }
-    .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card__arrow { width: 2rem; height: 2rem; }
+    .ekko-collection-list[data-mobile-card-layout='horizontal'] .ekko-collection-card__cta { font-size: .75rem; }
   }
 
   .ekko-collection-list[data-reveal='true'] .ekko-collection-card { opacity: 0; transform: translateY(1.5rem); transition: opacity 500ms ease, transform 650ms cubic-bezier(.22, 1, .36, 1); }
@@ -477,6 +618,13 @@
   .ekko-collection-list[data-reveal='true'].is-visible .ekko-collection-card:nth-child(3) { transition-delay: 140ms; }
   .ekko-collection-list[data-reveal='true'].is-visible .ekko-collection-card:nth-child(4) { transition-delay: 210ms; }
   .ekko-collection-list[data-reveal='true'].is-visible .ekko-collection-card:nth-child(n + 5) { transition-delay: 280ms; }
+
+  @media screen and (pointer: fine) {
+    .ekko-collection-card:hover,
+    .ekko-collection-list[data-reveal='true'].is-visible .ekko-collection-card:hover {
+      transform: translateY(-.25rem);
+    }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .ekko-collection-list__viewport { scroll-behavior: auto !important; }
@@ -572,16 +720,20 @@
     { "type": "header", "content": "t:sections.collection-list.settings.layout_header" },
     { "type": "range", "id": "columns", "label": "t:sections.global.settings.columns.label", "min": 1, "max": 5, "step": 1, "default": 4 },
     { "type": "checkbox", "id": "carousel_on_desktop", "label": "t:sections.global.settings.carousel_on_desktop.label", "default": true },
+    { "type": "checkbox", "id": "feature_first_card", "label": "t:sections.collection-list.settings.feature_first_card", "default": true, "visible_if": "{{ section.settings.carousel_on_desktop == false }}" },
     { "type": "select", "id": "image_source", "label": "t:sections.collection-list.settings.image_source", "options": [{ "value": "collection", "label": "t:sections.collection-list.options.collection_image" }, { "value": "product", "label": "t:sections.collection-list.options.first_product_image" }], "default": "collection" },
     { "type": "select", "id": "image_ratio", "label": "t:sections.global.settings.image_ratio.label", "options": [{ "value": "adapt", "label": "t:sections.global.settings.image_ratio.options__1.label" }, { "value": "square", "label": "t:sections.global.settings.image_ratio.options__2.label" }, { "value": "portrait", "label": "t:sections.global.settings.image_ratio.options__3.label" }, { "value": "landscape", "label": "t:sections.global.settings.image_ratio.options__4.label" }, { "value": "wide", "label": "t:sections.global.settings.image_ratio.options__5.label" }], "default": "square" },
-    { "type": "select", "id": "card_presentation", "label": "t:sections.collection-list.settings.card_presentation", "options": [{ "value": "minimal", "label": "t:sections.collection-list.options.minimal" }, { "value": "surface", "label": "t:sections.collection-list.options.surface" }, { "value": "editorial", "label": "t:sections.collection-list.options.editorial" }], "default": "minimal" },
+    { "type": "select", "id": "card_presentation", "label": "t:sections.collection-list.settings.card_presentation", "options": [{ "value": "minimal", "label": "t:sections.collection-list.options.minimal" }, { "value": "surface", "label": "t:sections.collection-list.options.surface" }, { "value": "editorial", "label": "t:sections.collection-list.options.editorial" }], "default": "editorial" },
     { "type": "text_alignment", "id": "card_content_alignment", "label": "t:sections.collection-list.settings.card_content_alignment", "default": "left" },
-    { "type": "color", "id": "card_background", "label": "t:sections.collection-list.settings.card_background", "default": "#ffffff", "visible_if": "{{ section.settings.card_presentation != 'minimal' }}" },
+    { "type": "color", "id": "card_background", "label": "t:sections.collection-list.settings.card_background", "default": "#f5f4f1" },
     { "type": "range", "id": "card_radius", "label": "t:sections.collection-list.settings.card_radius", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 16 },
     { "type": "range", "id": "gap", "label": "t:sections.collection-list.settings.gap", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 20 },
     { "type": "checkbox", "id": "show_products_count", "label": "t:sections.collection-list.settings.show_products_count", "default": true },
+    { "type": "text", "id": "card_link_label", "label": "t:sections.collection-list.settings.card_link_label", "default": "Explore collection" },
     { "type": "checkbox", "id": "show_arrow", "label": "t:sections.collection-list.settings.show_arrow", "default": true },
     { "type": "checkbox", "id": "show_view_all", "label": "t:sections.collection-list.settings.show_view_all.label", "info": "t:sections.collection-list.settings.show_view_all.info", "default": false },
+    { "type": "text", "id": "view_all_label", "label": "t:sections.collection-list.settings.view_all_label", "default": "View all", "visible_if": "{{ section.settings.show_view_all == true }}" },
+    { "type": "url", "id": "view_all_link", "label": "t:sections.collection-list.settings.view_all_link", "visible_if": "{{ section.settings.show_view_all == true }}" },
     { "type": "header", "content": "t:sections.global.settings.header__mobile.content" },
     { "type": "select", "id": "columns_mobile", "label": "t:sections.global.settings.columns_mobile.label", "options": [{ "value": "1", "label": "t:sections.global.settings.columns_mobile.options__1.label" }, { "value": "2", "label": "t:sections.global.settings.columns_mobile.options__2.label" }], "default": "1" },
     { "type": "checkbox", "id": "swipe_on_mobile", "label": "t:sections.global.settings.swipe_on_mobile.label", "default": true },
@@ -621,9 +773,29 @@
       "settings": [
         { "type": "collection", "id": "collection", "label": "t:sections.global.settings.collection.label" },
         { "type": "image_picker", "id": "image", "label": "t:sections.global.settings.image.label" },
+        { "type": "text", "id": "image_alt", "label": "t:sections.collection-list.blocks.shared.image_alt" },
+        { "type": "text", "id": "label", "label": "t:sections.collection-list.blocks.shared.label" },
         { "type": "text", "id": "title", "label": "t:sections.global.settings.title.label" },
         { "type": "inline_richtext", "id": "description", "label": "t:sections.global.settings.description.label" },
-        { "type": "checkbox", "id": "overlay_content", "label": "t:sections.collection-list.blocks.collection.overlay_content", "default": false },
+        { "type": "checkbox", "id": "overlay_content", "label": "t:sections.collection-list.blocks.shared.overlay_content", "default": false },
+        { "type": "header", "content": "t:sections.global.settings.header__colors.content", "visible_if": "{{ block.settings.overlay_content == true }}" },
+        { "type": "color", "id": "color_text", "label": "t:sections.global.settings.color_text.label", "default": "#ffffff", "visible_if": "{{ block.settings.overlay_content == true }}" },
+        { "type": "color", "id": "color_overlay", "label": "t:sections.global.settings.color_overlay.label", "default": "#000000", "visible_if": "{{ block.settings.overlay_content == true }}" },
+        { "type": "range", "id": "overlay_opacity", "label": "t:sections.global.settings.overlay_opacity.label", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 30, "visible_if": "{{ block.settings.overlay_content == true }}" }
+      ]
+    },
+    {
+      "type": "custom_category",
+      "name": "t:sections.collection-list.blocks.custom_category.name",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "t:sections.global.settings.image.label" },
+        { "type": "text", "id": "image_alt", "label": "t:sections.collection-list.blocks.shared.image_alt" },
+        { "type": "text", "id": "label", "label": "t:sections.collection-list.blocks.shared.label" },
+        { "type": "text", "id": "title", "label": "t:sections.global.settings.title.label", "default": "Custom category" },
+        { "type": "inline_richtext", "id": "description", "label": "t:sections.global.settings.description.label" },
+        { "type": "url", "id": "link", "label": "t:sections.collection-list.blocks.custom_category.link", "info": "t:sections.collection-list.blocks.custom_category.link_info" },
+        { "type": "text", "id": "count_text", "label": "t:sections.collection-list.blocks.custom_category.count_text", "info": "t:sections.collection-list.blocks.custom_category.count_text_info" },
+        { "type": "checkbox", "id": "overlay_content", "label": "t:sections.collection-list.blocks.shared.overlay_content", "default": false },
         { "type": "header", "content": "t:sections.global.settings.header__colors.content", "visible_if": "{{ block.settings.overlay_content == true }}" },
         { "type": "color", "id": "color_text", "label": "t:sections.global.settings.color_text.label", "default": "#ffffff", "visible_if": "{{ block.settings.overlay_content == true }}" },
         { "type": "color", "id": "color_overlay", "label": "t:sections.global.settings.color_overlay.label", "default": "#000000", "visible_if": "{{ block.settings.overlay_content == true }}" },

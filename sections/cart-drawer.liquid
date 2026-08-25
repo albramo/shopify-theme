@@ -15,7 +15,6 @@
     aria-modal="true"
     aria-label="{{ 'general.cart.title' | t | escape }}"
     data-section-id="{{ section.id }}"
-    data-render-section-id="cart-drawer"
     shopify-design-mode
     hidden
   >
@@ -129,7 +128,7 @@
                   assign items_in_cart = cart.item_count | minus: gift_wraps_in_cart
                 endif
               -%}
-              <cart-items class="block grow" data-section-id="{{ section.id }}" data-render-section-id="cart-drawer">
+              <cart-items class="block grow" data-section-id="{{ section.id }}">
                 <ul class="horizontal-products grid" role="list">
                   {%- for item in cart.items -%}
                     {%- liquid

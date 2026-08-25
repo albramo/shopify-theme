@@ -1,0 +1,749 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+
+  assign region_label = section.settings.heading | strip_html | default: section.settings.subheading
+  if region_label == blank
+    assign region_label = 'sections.horizontal_card_carousel.region_label' | t
+  endif
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    --horizontal-section-background: {{ section.settings.background }};
+    --horizontal-section-text: {{ section.settings.text_color }};
+    --horizontal-card-stage-width: min({{ section.settings.card_width }}px, calc(100vw - 8rem));
+    --horizontal-card-stage-width-mobile: {{ section.settings.card_width_mobile }}vw;
+    --horizontal-card-side-scale: {{ section.settings.side_card_scale | divided_by: 100.0 }};
+    --horizontal-card-height: {{ section.settings.card_height }}px;
+    --horizontal-card-gap: {{ section.settings.card_gap }}px;
+    --horizontal-card-gap-mobile: {{ section.settings.card_gap_mobile }}px;
+    --horizontal-card-radius: {{ section.settings.card_radius }}px;
+    --horizontal-card-content-padding: {{ section.settings.content_padding }}px;
+    --horizontal-card-content-padding-mobile: {{ section.settings.content_padding_mobile }}px;
+    --horizontal-carousel-custom-width: {{ section.settings.custom_content_width }}vw;
+    --horizontal-carousel-header-content-width: {{ section.settings.header_content_width }}%;
+    --horizontal-carousel-padding-top: {{ section.settings.padding_top }}px;
+    --horizontal-carousel-padding-bottom: {{ section.settings.padding_bottom }}px;
+  }
+{% endstyle %}
+
+<section class="ekko-horizontal-carousel-section">
+  <horizontal-card-carousel
+    class="ekko-horizontal-carousel"
+    data-loop="{{ section.settings.loop }}"
+    data-autoplay="{{ section.settings.autoplay }}"
+    data-autoplay-speed="{{ section.settings.autoplay_speed | times: 1000 }}"
+    data-pause-hover="{{ section.settings.pause_on_hover }}"
+    data-status-template="{{ 'sections.horizontal_card_carousel.status' | t: current: '[current]', total: '[total]' | escape }}"
+  >
+    <div class="ekko-horizontal-carousel__frame {{ frame_class }} ekko-paint-layer" data-width="{{ section.settings.content_width }}">
+      {%- if section.settings.subheading != blank or section.settings.heading != blank or section.settings.description != blank -%}
+        <header class="ekko-horizontal-carousel__header" data-alignment="{{ section.settings.heading_alignment }}">
+          <div class="ekko-horizontal-carousel__heading-wrap">
+            {%- if section.settings.subheading != blank -%}
+              <p class="ekko-horizontal-carousel__eyebrow">{{ section.settings.subheading | escape }}</p>
+            {%- endif -%}
+            {%- if section.settings.heading != blank -%}
+              <{{ section.settings.heading_tag }} class="ekko-horizontal-carousel__heading">{{ section.settings.heading }}</{{ section.settings.heading_tag }}>
+            {%- endif -%}
+            {%- if section.settings.description != blank -%}
+              <div class="ekko-horizontal-carousel__description rte">{{ section.settings.description }}</div>
+            {%- endif -%}
+          </div>
+
+          {%- if section.settings.show_arrows -%}
+            <div class="ekko-horizontal-carousel__header-controls" data-header-controls>
+              <button type="button" data-previous aria-controls="HorizontalCarouselViewport-{{ section.id }}" aria-label="{{ 'general.pagination.previous' | t | escape }}">
+                {%- render 'icon', icon: 'arrow-left', size: 'sm' -%}
+              </button>
+              <button type="button" data-next aria-controls="HorizontalCarouselViewport-{{ section.id }}" aria-label="{{ 'general.pagination.next' | t | escape }}">
+                {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
+              </button>
+            </div>
+          {%- endif -%}
+        </header>
+      {%- endif -%}
+
+      <div class="ekko-horizontal-carousel__shell">
+        <div
+          id="HorizontalCarouselViewport-{{ section.id }}"
+          class="ekko-horizontal-carousel__viewport"
+          data-viewport
+          tabindex="0"
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="{{ region_label | escape }}"
+        >
+          <div class="ekko-horizontal-carousel__track" data-track>
+            {% content_for 'blocks' %}
+          </div>
+        </div>
+      </div>
+
+      {%- if section.settings.show_progress or section.settings.show_counter or section.settings.show_mobile_arrows -%}
+        <footer class="ekko-horizontal-carousel__footer">
+          {%- if section.settings.show_progress -%}
+            <span class="ekko-horizontal-carousel__progress" aria-hidden="true"><span data-progress></span></span>
+          {%- endif -%}
+          {%- if section.settings.show_counter -%}
+            <span class="ekko-horizontal-carousel__counter" data-counter aria-hidden="true">01 / 01</span>
+          {%- endif -%}
+          {%- if section.settings.show_mobile_arrows -%}
+            <div class="ekko-horizontal-carousel__mobile-controls">
+              <button type="button" data-previous aria-controls="HorizontalCarouselViewport-{{ section.id }}" aria-label="{{ 'general.pagination.previous' | t | escape }}">
+                {%- render 'icon', icon: 'arrow-left', size: 'sm' -%}
+              </button>
+              <button type="button" data-next aria-controls="HorizontalCarouselViewport-{{ section.id }}" aria-label="{{ 'general.pagination.next' | t | escape }}">
+                {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
+              </button>
+            </div>
+          {%- endif -%}
+          <span class="sr-only" data-status aria-live="polite"></span>
+        </footer>
+      {%- endif -%}
+    </div>
+  </horizontal-card-carousel>
+</section>
+
+{% stylesheet %}
+  .ekko-horizontal-carousel-section {
+    position: relative;
+    overflow: clip;
+    padding-block: var(--horizontal-carousel-padding-top) var(--horizontal-carousel-padding-bottom);
+    color: var(--horizontal-section-text);
+    background: var(--horizontal-section-background);
+  }
+
+  .ekko-horizontal-carousel,
+  .ekko-horizontal-carousel__frame,
+  .ekko-horizontal-carousel__shell { display: block; width: 100%; }
+
+  .ekko-horizontal-carousel__shell {
+    width: 100vw;
+    max-width: 100vw;
+    margin-inline: calc(50% - 50vw);
+  }
+
+  .ekko-horizontal-carousel__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-bottom: clamp(1.75rem, 4vw, 3.75rem);
+    gap: 2rem;
+    align-items: end;
+  }
+
+  .ekko-horizontal-carousel__heading-wrap {
+    display: flex;
+    flex-direction: column;
+    width: min(100%, var(--horizontal-carousel-header-content-width));
+    gap: .75rem;
+  }
+
+  .ekko-horizontal-carousel__header[data-alignment='center'] {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+
+  .ekko-horizontal-carousel__header[data-alignment='center'] .ekko-horizontal-carousel__heading-wrap {
+    margin-inline: auto;
+    align-items: center;
+  }
+
+  .ekko-horizontal-carousel__header[data-alignment='center'] .ekko-horizontal-carousel__header-controls {
+    justify-self: center;
+  }
+
+  .ekko-horizontal-carousel__header[data-alignment='right'] {
+    text-align: right;
+  }
+
+  .ekko-horizontal-carousel__header[data-alignment='right'] .ekko-horizontal-carousel__heading-wrap {
+    margin-inline-start: auto;
+    align-items: flex-end;
+  }
+
+  .ekko-horizontal-carousel__eyebrow {
+    margin: 0;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .ekko-horizontal-carousel__heading {
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    font-family: var(--font-heading-family);
+    font-size: clamp(2.25rem, 5vw, 5.75rem);
+    font-weight: var(--font-heading-weight);
+    line-height: .98;
+    letter-spacing: -.05em;
+    text-wrap: balance;
+  }
+
+  .ekko-horizontal-carousel__description {
+    width: 100%;
+    max-width: none;
+    color: color-mix(in srgb, var(--horizontal-section-text) 70%, transparent);
+    font-size: clamp(.95rem, 1.2vw, 1.125rem);
+  }
+
+  .ekko-horizontal-carousel__description > :first-child { margin-top: 0; }
+  .ekko-horizontal-carousel__description > :last-child { margin-bottom: 0; }
+
+  .ekko-horizontal-carousel__header-controls,
+  .ekko-horizontal-carousel__mobile-controls {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+  }
+
+  .ekko-horizontal-carousel :is(.ekko-horizontal-carousel__header-controls, .ekko-horizontal-carousel__mobile-controls) button {
+    display: grid;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: var(--horizontal-section-text);
+    background: color-mix(in srgb, var(--horizontal-section-text) 9%, transparent);
+    cursor: pointer;
+    transition: color 180ms ease, background-color 180ms ease, opacity 180ms ease;
+  }
+
+  .ekko-horizontal-carousel :is(.ekko-horizontal-carousel__header-controls, .ekko-horizontal-carousel__mobile-controls) button:hover {
+    color: var(--horizontal-section-background);
+    background: var(--horizontal-section-text);
+  }
+
+  .ekko-horizontal-carousel :is(.ekko-horizontal-carousel__header-controls, .ekko-horizontal-carousel__mobile-controls) button:disabled {
+    cursor: default;
+    opacity: .35;
+  }
+
+  .ekko-horizontal-carousel :is(.ekko-horizontal-carousel__header-controls, .ekko-horizontal-carousel__mobile-controls) button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+
+  .ekko-horizontal-carousel__viewport {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-behavior: smooth;
+    scroll-padding-inline: calc((100vw - var(--horizontal-card-stage-width)) / 2);
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+    cursor: grab;
+  }
+
+  .ekko-horizontal-carousel__viewport:active { cursor: grabbing; }
+  .ekko-horizontal-carousel__viewport::-webkit-scrollbar { display: none; }
+
+  .ekko-horizontal-carousel__track {
+    display: flex;
+    box-sizing: border-box;
+    width: max-content;
+    min-width: 100vw;
+    padding-inline: calc((100vw - var(--horizontal-card-stage-width)) / 2);
+    gap: var(--horizontal-card-gap);
+    align-items: center;
+  }
+
+  .ekko-horizontal-carousel__track > .shopify-block {
+    display: block;
+    flex: 0 0 var(--horizontal-card-stage-width);
+    min-width: 0;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  .ekko-horizontal-carousel__track > .shopify-block > [data-horizontal-card] {
+    width: 100%;
+  }
+
+  .ekko-horizontal-carousel__footer {
+    display: grid;
+    grid-template-columns: minmax(5rem, 1fr) auto auto;
+    min-height: 3rem;
+    margin-top: clamp(1.25rem, 2.5vw, 2rem);
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .ekko-horizontal-carousel__progress {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 2px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--horizontal-section-text) 16%, transparent);
+  }
+
+  .ekko-horizontal-carousel__progress > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--horizontal-section-text);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 280ms cubic-bezier(.22, 1, .36, 1);
+  }
+
+  .ekko-horizontal-carousel__counter {
+    min-width: 4.5rem;
+    color: color-mix(in srgb, var(--horizontal-section-text) 68%, transparent);
+    font-size: .78rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-align: end;
+  }
+
+  .ekko-horizontal-carousel__mobile-controls { display: none; }
+
+  @media screen and (min-width: 750px) {
+    .ekko-horizontal-carousel__frame[data-width='custom'] {
+      width: min(100%, var(--horizontal-carousel-custom-width));
+      max-width: var(--horizontal-carousel-custom-width);
+      margin-inline: auto;
+    }
+  }
+
+  @media screen and (max-width: 767px) {
+    .ekko-horizontal-carousel__header {
+      grid-template-columns: minmax(0, 1fr);
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
+
+    .ekko-horizontal-carousel__header-controls { display: none; }
+    .ekko-horizontal-carousel__heading { font-size: clamp(2rem, 10vw, 3.25rem); }
+    .ekko-horizontal-carousel__viewport {
+      scroll-padding-inline: calc((100vw - var(--horizontal-card-stage-width-mobile)) / 2);
+    }
+    .ekko-horizontal-carousel__track {
+      padding-inline: calc((100vw - var(--horizontal-card-stage-width-mobile)) / 2);
+      gap: var(--horizontal-card-gap-mobile);
+    }
+    .ekko-horizontal-carousel__track > .shopify-block {
+      flex-basis: var(--horizontal-card-stage-width-mobile);
+    }
+    .ekko-horizontal-carousel__footer { grid-template-columns: minmax(4rem, 1fr) auto auto; }
+    .ekko-horizontal-carousel__mobile-controls { display: flex; }
+    .ekko-horizontal-carousel__mobile-controls button { width: 2.75rem; height: 2.75rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-horizontal-carousel__viewport { scroll-behavior: auto; }
+    .ekko-horizontal-carousel__progress > span { transition: none; }
+    .ekko-horizontal-carousel :is(.ekko-horizontal-carousel__header-controls, .ekko-horizontal-carousel__mobile-controls) button { transition: none; }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('horizontal-card-carousel')) {
+    customElements.define('horizontal-card-carousel', class HorizontalCardCarousel extends HTMLElement {
+      connectedCallback() {
+        this.viewport = this.querySelector('[data-viewport]');
+        this.track = this.querySelector('[data-track]');
+        this.items = Array.from(this.querySelectorAll('[data-horizontal-card]'));
+        this.previousButtons = Array.from(this.querySelectorAll('[data-previous]'));
+        this.nextButtons = Array.from(this.querySelectorAll('[data-next]'));
+        this.progress = this.querySelector('[data-progress]');
+        this.counter = this.querySelector('[data-counter]');
+        this.status = this.querySelector('[data-status]');
+        this.controls = Array.from(this.querySelectorAll('[data-header-controls], .ekko-horizontal-carousel__footer'));
+        if (!this.viewport || this.items.length === 0) return;
+
+        this.loop = this.dataset.loop === 'true';
+        this.autoplayEnabled = this.dataset.autoplay === 'true';
+        this.autoplaySpeed = Math.max(3000, Number(this.dataset.autoplaySpeed) || 5000);
+        this.pauseOnHover = this.dataset.pauseHover === 'true';
+        this.activeIndex = 0;
+        this.scrollFrame = null;
+        this.scrollEndTimer = null;
+        this.isReordering = false;
+
+        this.items.forEach((item, index) => item.dataset.carouselOrder = index);
+        if (this.loop && this.items.length > 1) {
+          const firstItem = this.items[0];
+          this.moveLastToStart();
+          this.activeIndex = this.items.indexOf(firstItem);
+        }
+
+        this.onScroll = () => {
+          if (this.isReordering) return;
+          if (this.scrollFrame) return;
+          this.scrollFrame = requestAnimationFrame(() => {
+            this.scrollFrame = null;
+            this.update();
+          });
+          clearTimeout(this.scrollEndTimer);
+          this.scrollEndTimer = setTimeout(() => this.ensureLoopBuffer(), 140);
+        };
+        this.onPrevious = () => this.navigate(-1);
+        this.onNext = () => this.navigate(1);
+        this.onVisibility = () => {
+          if (document.hidden) this.stopAutoplay();
+          else this.startAutoplay();
+          this.syncMediaPlayback(true);
+        };
+        this.onVideoPlay = (event) => {
+          const player = event.target.closest?.('video-media');
+          const card = player?.closest('[data-horizontal-card]');
+          if (!player || !card || (card === this.items[this.activeIndex] && !document.hidden)) return;
+          requestAnimationFrame(() => player.pause?.());
+        };
+        this.onBlockSelect = (event) => {
+          const eventTarget = event.target;
+          const card = eventTarget.matches?.('[data-horizontal-card]')
+            ? eventTarget
+            : eventTarget.querySelector?.('[data-horizontal-card]')
+              || eventTarget.closest?.('[data-horizontal-card]');
+          if (!card || !this.contains(card)) return;
+          this.stopAutoplay();
+          this.refreshItems();
+          const selectedIndex = this.items.indexOf(card);
+          if (selectedIndex < 0) return;
+          this.goTo(selectedIndex, false);
+        };
+        this.onCardClick = (event) => {
+          if (window.Shopify?.designMode) return;
+          const card = event.target.closest?.('[data-horizontal-card]');
+          if (!card || !this.contains(card)) return;
+          const index = this.items.indexOf(card);
+          if (index < 0 || index === this.activeIndex) return;
+          event.preventDefault();
+          event.stopPropagation();
+          this.goTo(index);
+        };
+
+        this.previousButtons.forEach((button) => button.addEventListener('click', this.onPrevious));
+        this.nextButtons.forEach((button) => button.addEventListener('click', this.onNext));
+        this.viewport.addEventListener('scroll', this.onScroll, { passive: true });
+        this.viewport.addEventListener('click', this.onCardClick, true);
+        this.addEventListener('video:play', this.onVideoPlay);
+        document.addEventListener('visibilitychange', this.onVisibility);
+        document.addEventListener('shopify:block:select', this.onBlockSelect);
+
+        if (this.pauseOnHover) {
+          this.addEventListener('pointerenter', this.stopAutoplay);
+          this.addEventListener('pointerleave', this.startAutoplay);
+        }
+        this.addEventListener('focusin', this.stopAutoplay);
+        this.addEventListener('focusout', this.startAutoplay);
+        this.enablePointerDrag();
+        if ('ResizeObserver' in window) {
+          this.resizeObserver = new ResizeObserver(() => this.goTo(this.activeIndex, false));
+          this.resizeObserver.observe(this.viewport);
+        }
+        requestAnimationFrame(() => this.goTo(this.activeIndex, false));
+        this.startAutoplay();
+      }
+
+      disconnectedCallback() {
+        this.stopAutoplay();
+        this.pauseAllMedia();
+        if (this.scrollFrame) cancelAnimationFrame(this.scrollFrame);
+        clearTimeout(this.scrollEndTimer);
+        this.previousButtons?.forEach((button) => button.removeEventListener('click', this.onPrevious));
+        this.nextButtons?.forEach((button) => button.removeEventListener('click', this.onNext));
+        this.viewport?.removeEventListener('scroll', this.onScroll);
+        this.viewport?.removeEventListener('click', this.onCardClick, true);
+        this.removeEventListener('video:play', this.onVideoPlay);
+        this.resizeObserver?.disconnect();
+        document.removeEventListener('visibilitychange', this.onVisibility);
+        document.removeEventListener('shopify:block:select', this.onBlockSelect);
+      }
+
+      enablePointerDrag() {
+        let pointerId = null;
+        let startX = 0;
+        let startScroll = 0;
+        let dragged = false;
+
+        this.viewport.addEventListener('pointerdown', (event) => {
+          if (event.pointerType === 'touch' || event.button !== 0) return;
+          pointerId = event.pointerId;
+          startX = event.clientX;
+          startScroll = this.viewport.scrollLeft;
+          dragged = false;
+          this.viewport.setPointerCapture(pointerId);
+          this.stopAutoplay();
+        });
+
+        this.viewport.addEventListener('pointermove', (event) => {
+          if (event.pointerId !== pointerId) return;
+          const distance = event.clientX - startX;
+          if (Math.abs(distance) > 5) dragged = true;
+          this.viewport.scrollLeft = startScroll - distance;
+        });
+
+        const endDrag = (event) => {
+          if (event.pointerId !== pointerId) return;
+          if (this.viewport.hasPointerCapture(pointerId)) this.viewport.releasePointerCapture(pointerId);
+          pointerId = null;
+          if (dragged) {
+            const nearest = this.getNearestIndex();
+            this.goTo(nearest);
+          }
+          this.startAutoplay();
+        };
+        this.viewport.addEventListener('pointerup', endDrag);
+        this.viewport.addEventListener('pointercancel', endDrag);
+        this.viewport.addEventListener('click', (event) => {
+          if (!dragged) return;
+          event.preventDefault();
+          event.stopPropagation();
+          dragged = false;
+        }, true);
+      }
+
+      getNearestIndex() {
+        const viewportRect = this.viewport.getBoundingClientRect();
+        const viewportCenter = viewportRect.left + viewportRect.width / 2;
+        let nearestIndex = 0;
+        let nearestDistance = Infinity;
+        this.items.forEach((item, index) => {
+          const itemRect = item.getBoundingClientRect();
+          const itemCenter = itemRect.left + itemRect.width / 2;
+          const distance = Math.abs(itemCenter - viewportCenter);
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestIndex = index;
+          }
+        });
+        return nearestIndex;
+      }
+
+      getTrackNode(item) {
+        const wrapper = item?.closest('.shopify-block');
+        return wrapper?.parentElement === this.track ? wrapper : item;
+      }
+
+      refreshItems() {
+        this.items = Array.from(this.track.querySelectorAll('[data-horizontal-card]'));
+      }
+
+      preserveActivePosition(callback) {
+        const activeItem = this.items[this.activeIndex];
+        if (!activeItem) return;
+        const before = activeItem.getBoundingClientRect().left;
+        const previousScrollBehavior = this.viewport.style.scrollBehavior;
+        const previousScrollSnapType = this.viewport.style.scrollSnapType;
+        this.isReordering = true;
+        this.viewport.style.scrollBehavior = 'auto';
+        this.viewport.style.scrollSnapType = 'none';
+        callback();
+        this.refreshItems();
+        const after = activeItem.getBoundingClientRect().left;
+        this.viewport.scrollTo({ left: this.viewport.scrollLeft + after - before, behavior: 'auto' });
+        this.activeIndex = this.items.indexOf(activeItem);
+        requestAnimationFrame(() => {
+          this.viewport.style.scrollBehavior = previousScrollBehavior;
+          this.viewport.style.scrollSnapType = previousScrollSnapType;
+          this.isReordering = false;
+        });
+      }
+
+      moveFirstToEnd(preservePosition = false) {
+        if (this.items.length < 2) return;
+        const move = () => this.track.append(this.getTrackNode(this.items[0]));
+        if (preservePosition) this.preserveActivePosition(move);
+        else {
+          move();
+          this.refreshItems();
+        }
+      }
+
+      moveLastToStart(preservePosition = false) {
+        if (this.items.length < 2) return;
+        const move = () => this.track.insertBefore(
+          this.getTrackNode(this.items[this.items.length - 1]),
+          this.getTrackNode(this.items[0])
+        );
+        if (preservePosition) this.preserveActivePosition(move);
+        else {
+          move();
+          this.refreshItems();
+        }
+      }
+
+      ensureLoopBuffer() {
+        if (!this.loop || this.items.length < 3 || this.isReordering) return;
+        if (this.activeIndex === 0) this.moveLastToStart(true);
+        else if (this.activeIndex === this.items.length - 1) this.moveFirstToEnd(true);
+        else return;
+        this.renderState();
+      }
+
+      navigate(direction) {
+        if (!this.loop) {
+          this.goTo(this.activeIndex + direction);
+          return;
+        }
+
+        if (this.items.length === 2) {
+          if (direction > 0 && this.activeIndex === this.items.length - 1) {
+            this.moveFirstToEnd(true);
+          } else if (direction < 0 && this.activeIndex === 0) {
+            this.moveLastToStart(true);
+          }
+          this.goTo(this.activeIndex + direction);
+          return;
+        }
+
+        if (direction > 0 && this.activeIndex + 1 >= this.items.length - 1) {
+          this.moveFirstToEnd(true);
+        } else if (direction < 0 && this.activeIndex - 1 <= 0) {
+          this.moveLastToStart(true);
+        }
+        this.goTo(this.activeIndex + direction);
+      }
+
+      goTo(index, smooth = true) {
+        if (this.items.length === 0) return;
+        index = Math.max(0, Math.min(index, this.items.length - 1));
+        const item = this.items[index];
+        const viewportRect = this.viewport.getBoundingClientRect();
+        const itemRect = item.getBoundingClientRect();
+        const left = this.viewport.scrollLeft
+          + itemRect.left
+          - viewportRect.left
+          - (this.viewport.clientWidth - itemRect.width) / 2;
+        this.viewport.scrollTo({ left: Math.max(0, left), behavior: smooth ? 'smooth' : 'auto' });
+        this.activeIndex = index;
+        this.renderState();
+      }
+
+      update() {
+        this.activeIndex = this.getNearestIndex();
+        this.renderState();
+      }
+
+      renderState() {
+        const total = this.items.length;
+        const activeItem = this.items[this.activeIndex];
+        const current = Number(activeItem?.dataset.carouselOrder ?? this.activeIndex) + 1;
+        const hasMultiple = total > 1;
+        this.items.forEach((item, index) => {
+          const active = index === this.activeIndex;
+          item.classList.toggle('is-active', active);
+          if (active) item.setAttribute('aria-current', 'true');
+          else item.removeAttribute('aria-current');
+        });
+        this.syncMediaPlayback();
+        this.controls.forEach((control) => control.hidden = !hasMultiple);
+        this.previousButtons.forEach((button) => button.disabled = !this.loop && this.activeIndex === 0);
+        this.nextButtons.forEach((button) => button.disabled = !this.loop && this.activeIndex === total - 1);
+        if (this.progress) this.progress.style.transform = `scaleX(${current / total})`;
+        if (this.counter) this.counter.textContent = `${String(current).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+        if (this.status) {
+          this.status.textContent = (this.dataset.statusTemplate || 'Card [current] of [total]')
+            .replace('[current]', current)
+            .replace('[total]', total);
+        }
+      }
+
+      syncMediaPlayback(force = false) {
+        const activeItem = this.items[this.activeIndex];
+        if (!force && this.mediaActiveItem === activeItem) return;
+        this.mediaActiveItem = activeItem;
+
+        this.items.forEach((item) => {
+          const isActive = item === activeItem;
+          const shouldAutoplay = item.dataset.videoAutoplay === 'true';
+          item.querySelectorAll('video-media').forEach((player) => {
+            if (isActive && shouldAutoplay && !document.hidden) player.play?.();
+            else player.pause?.();
+          });
+        });
+      }
+
+      pauseAllMedia() {
+        this.querySelectorAll('video-media').forEach((player) => player.pause?.());
+      }
+
+      startAutoplay = () => {
+        if (!this.autoplayEnabled || this.items.length < 2 || document.hidden) return;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches || window.Shopify?.designMode) return;
+        this.stopAutoplay();
+        this.autoplayTimer = window.setInterval(() => {
+          if (!this.loop && this.activeIndex >= this.items.length - 1) {
+            this.stopAutoplay();
+            return;
+          }
+          this.navigate(1);
+        }, this.autoplaySpeed);
+      };
+
+      stopAutoplay = () => {
+        if (!this.autoplayTimer) return;
+        clearInterval(this.autoplayTimer);
+        this.autoplayTimer = null;
+      };
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.horizontal_card_carousel.name",
+  "tag": "section",
+  "class": "shopify-section--horizontal-card-carousel",
+  "blocks": [{ "type": "_horizontal-card" }],
+  "settings": [
+    { "type": "header", "content": "t:sections.horizontal_card_carousel.header" },
+    { "type": "text", "id": "subheading", "label": "t:sections.horizontal_card_carousel.subheading", "default": "Explore the edit" },
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.horizontal_card_carousel.heading", "default": "Stories made to move" },
+    { "type": "select", "id": "heading_tag", "label": "t:sections.horizontal_card_carousel.heading_tag", "options": [{ "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }, { "value": "p", "label": "P" }], "default": "h2" },
+    { "type": "richtext", "id": "description", "label": "t:sections.horizontal_card_carousel.description", "default": "<p>Use wide editorial cards to introduce products, collections, campaigns, or brand stories.</p>" },
+    { "type": "text_alignment", "id": "heading_alignment", "label": "t:sections.horizontal_card_carousel.heading_alignment", "default": "left" },
+    { "type": "range", "id": "header_content_width", "label": "t:sections.horizontal_card_carousel.header_content_width", "min": 40, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "header", "content": "t:sections.horizontal_card_carousel.carousel" },
+    { "type": "range", "id": "card_width", "label": "t:sections.horizontal_card_carousel.card_width", "min": 520, "max": 840, "step": 20, "unit": "px", "default": 720 },
+    { "type": "range", "id": "card_height", "label": "t:sections.horizontal_card_carousel.card_height", "min": 340, "max": 560, "step": 20, "unit": "px", "default": 440 },
+    { "type": "range", "id": "card_width_mobile", "label": "t:sections.horizontal_card_carousel.card_width_mobile", "min": 78, "max": 94, "step": 2, "unit": "%", "default": 86 },
+    { "type": "range", "id": "side_card_scale", "label": "t:sections.horizontal_card_carousel.side_card_scale", "min": 90, "max": 100, "step": 1, "unit": "%", "default": 94 },
+    { "type": "range", "id": "card_gap", "label": "t:sections.horizontal_card_carousel.card_gap", "min": 8, "max": 40, "step": 2, "unit": "px", "default": 20 },
+    { "type": "range", "id": "card_gap_mobile", "label": "t:sections.horizontal_card_carousel.card_gap_mobile", "min": 8, "max": 24, "step": 2, "unit": "px", "default": 12 },
+    { "type": "range", "id": "card_radius", "label": "t:sections.horizontal_card_carousel.card_radius", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 24 },
+    { "type": "range", "id": "content_padding", "label": "t:sections.horizontal_card_carousel.content_padding", "min": 24, "max": 72, "step": 4, "unit": "px", "default": 48 },
+    { "type": "range", "id": "content_padding_mobile", "label": "t:sections.horizontal_card_carousel.content_padding_mobile", "min": 16, "max": 40, "step": 2, "unit": "px", "default": 24 },
+    { "type": "checkbox", "id": "show_arrows", "label": "t:sections.horizontal_card_carousel.show_arrows", "default": true },
+    { "type": "checkbox", "id": "show_mobile_arrows", "label": "t:sections.horizontal_card_carousel.show_mobile_arrows", "default": true },
+    { "type": "checkbox", "id": "show_progress", "label": "t:sections.horizontal_card_carousel.show_progress", "default": true },
+    { "type": "checkbox", "id": "show_counter", "label": "t:sections.horizontal_card_carousel.show_counter", "default": true },
+    { "type": "checkbox", "id": "loop", "label": "t:sections.horizontal_card_carousel.loop", "default": false },
+    { "type": "checkbox", "id": "autoplay", "label": "t:sections.horizontal_card_carousel.autoplay", "default": false },
+    { "type": "range", "id": "autoplay_speed", "label": "t:sections.horizontal_card_carousel.autoplay_speed", "min": 3, "max": 10, "step": 1, "unit": "s", "default": 5, "visible_if": "{{ section.settings.autoplay }}" },
+    { "type": "checkbox", "id": "pause_on_hover", "label": "t:sections.horizontal_card_carousel.pause_on_hover", "default": true, "visible_if": "{{ section.settings.autoplay }}" },
+    { "type": "header", "content": "t:sections.horizontal_card_carousel.layout" },
+    { "type": "select", "id": "content_width", "label": "t:sections.horizontal_card_carousel.content_width", "options": [{ "value": "page", "label": "t:sections.horizontal_card_carousel.page_width" }, { "value": "full", "label": "t:sections.horizontal_card_carousel.full_width" }, { "value": "custom", "label": "t:sections.horizontal_card_carousel.custom_width" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "t:sections.horizontal_card_carousel.custom_content_width", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+    { "type": "header", "content": "t:sections.horizontal_card_carousel.colors" },
+    { "type": "color", "id": "background", "label": "t:sections.horizontal_card_carousel.background", "default": "#FFFFFF" },
+    { "type": "color", "id": "text_color", "label": "t:sections.horizontal_card_carousel.text_color", "default": "#171717" },
+    { "type": "header", "content": "t:sections.horizontal_card_carousel.spacing" },
+    { "type": "range", "id": "padding_top", "label": "t:sections.horizontal_card_carousel.padding_top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 },
+    { "type": "range", "id": "padding_bottom", "label": "t:sections.horizontal_card_carousel.padding_bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 80 }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.horizontal_card_carousel.name",
+      "blocks": [
+        { "type": "_horizontal-card", "settings": { "subheading": "New arrivals", "heading": "Built for the next adventure", "text": "<p>Introduce a product, collection, or campaign with confident editorial pacing.</p>", "background": "#F1EEE8", "media_background": "#E7E2DA", "accent_color": "#171717" } },
+        { "type": "_horizontal-card", "settings": { "subheading": "Featured collection", "heading": "Designed around real life", "text": "<p>Mix cards with different media positions while keeping the rhythm consistent.</p>", "media_position": "right", "background": "#E8EFEA", "media_background": "#DCE6DF", "accent_color": "#173C2C" } },
+        { "type": "_horizontal-card", "settings": { "subheading": "Brand story", "heading": "Details worth discovering", "text": "<p>Let the next card remain visible so customers always know there is more to explore.</p>", "background": "#EEEAF4", "media_background": "#E3DDEC", "accent_color": "#332147" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

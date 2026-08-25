@@ -224,9 +224,48 @@
     .ekko-contact__aside { position: static; }
   }
   @media screen and (max-width: 749px) {
+    .ekko-contact-section,
+    .ekko-contact__frame,
+    .ekko-contact,
+    .ekko-contact__form,
+    .ekko-contact__fields,
+    .ekko-contact__aside {
+      min-height: 0;
+      height: auto;
+      max-height: none;
+    }
+    .ekko-contact,
+    .ekko-contact[data-form-position='right'][data-has-aside='true'] {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1.5rem;
+    }
+    .ekko-contact__form { flex: 0 0 auto; }
     .ekko-contact__fields { grid-template-columns: 1fr; gap: 1rem; }
     .ekko-contact__field { grid-column: 1; }
-    .ekko-contact__aside { padding: 1.25rem; }
+    .ekko-contact__aside {
+      position: relative;
+      inset: auto;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+      grid-auto-rows: max-content;
+      align-content: start;
+      align-items: start;
+      gap: 1.25rem;
+      margin: 0;
+      padding: 1.25rem;
+    }
+    .ekko-contact__aside-item {
+      align-content: start;
+      gap: .625rem;
+      min-width: 0;
+    }
+    .ekko-contact__aside-item .social-icons,
+    .ekko-contact__aside-item .social-icons > ul {
+      min-height: 0;
+      height: auto;
+      margin: 0;
+    }
     .ekko-contact__submit .button { width: 100%; min-height: 3rem; }
   }
 {% endstylesheet %}

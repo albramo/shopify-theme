@@ -15,9 +15,19 @@
     assign frame_class = 'page-width page-width--full'
   endif
 
+  assign view_all_url = section.settings.view_all_link
+  if view_all_url == blank
+    assign view_all_url = selected_collection.url
+  endif
+
+  assign view_all_label = section.settings.view_all_label
+  if view_all_label == blank
+    assign view_all_label = 'sections.featured_collection.view_all' | t
+  endif
+
   assign show_view_all = false
-  if section.settings.show_view_all and selected_collection != blank
-    if selected_collection.all_products_count > section.settings.product_limit
+  if section.settings.show_view_all
+    if view_all_url != blank and view_all_label != blank
       assign show_view_all = true
     endif
   endif
@@ -54,7 +64,7 @@
   >
     <div class="ekko-featured-collection__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
       <div class="ekko-featured-collection__layout ekko-featured-collection__layout--{{ section.settings.header_layout }}">
-        {%- if section.settings.heading != blank or section.settings.subheading != blank or section.settings.description != blank or show_view_all or desktop_carousel -%}
+        {%- if section.settings.heading != blank or section.settings.subheading != blank or section.settings.description != blank or show_view_all -%}
           <header class="ekko-featured-collection__header" data-align="{{ section.settings.heading_alignment }}">
             <div class="ekko-featured-collection__heading-wrap">
               {%- if section.settings.subheading != blank -%}
@@ -82,46 +92,38 @@
               {%- endif -%}
             </div>
 
-            <div class="ekko-featured-collection__actions">
-              {%- if show_view_all -%}
+            {%- if show_view_all -%}
+              <div class="ekko-featured-collection__actions">
                 <a
-                  class="{% if section.settings.view_all_style == 'button' %}button button--secondary icon-with-text{% else %}link icon-with-text{% endif %}"
-                  href="{{ selected_collection.url }}"
-                  aria-label="{{ 'sections.featured_collection.view_all_label' | t: collection_name: selected_collection.title | escape }}"
+                  class="ekko-featured-collection__view-all{% if section.settings.view_all_style == 'button' %} button button--secondary{% endif %}"
+                  href="{{ view_all_url }}"
+                  {% if selected_collection != blank %}
+                    aria-label="{{ 'sections.featured_collection.view_all_label' | t: collection_name: selected_collection.title | escape }}"
+                  {% else %}
+                    aria-label="{{ view_all_label | escape }}"
+                  {% endif %}
                 >
                   {%- if section.settings.view_all_style == 'button' -%}<span class="btn-fill" data-fill></span>{%- endif -%}
-                  <span class="{% if section.settings.view_all_style == 'button' %}btn-text{% endif %}">
-                    {{- 'sections.featured_collection.view_all' | t -}}
-                    {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
+                  <span class="ekko-featured-collection__view-all-text{% if section.settings.view_all_style == 'button' %} btn-text{% endif %}">{{ view_all_label | escape }}</span>
+                  <span class="ekko-featured-collection__view-all-icon" aria-hidden="true">
+                    {%- render 'icon', icon: 'chevron-right', size: 'sm', class: 'transform' -%}
                   </span>
                 </a>
-              {%- endif -%}
-
-              <div class="ekko-featured-collection__controls" data-controls>
-                <button class="button button--secondary" type="button" data-previous aria-controls="FeaturedCollectionViewport-{{ section.id }}" aria-label="{{ 'general.pagination.previous' | t | escape }}" disabled>
-                  <span class="btn-fill" data-fill></span>
-                  <span class="btn-text">{%- render 'icon', icon: 'chevron-left', class: 'transform' -%}</span>
-                </button>
-                <span class="ekko-featured-collection__progress" aria-hidden="true"><span data-progress></span></span>
-                <button class="button button--secondary" type="button" data-next aria-controls="FeaturedCollectionViewport-{{ section.id }}" aria-label="{{ 'general.pagination.next' | t | escape }}">
-                  <span class="btn-fill" data-fill></span>
-                  <span class="btn-text">{%- render 'icon', icon: 'chevron-right', class: 'transform' -%}</span>
-                </button>
-                <span class="sr-only" aria-live="polite" data-status></span>
               </div>
-            </div>
+            {%- endif -%}
           </header>
         {%- endif -%}
 
-        <div
-          id="FeaturedCollectionViewport-{{ section.id }}"
-          class="ekko-featured-collection__viewport"
-          data-viewport
-          role="region"
-          aria-label="{{ slider_label | escape }}"
-          {% if desktop_carousel or section.settings.swipe_on_mobile %}tabindex="0"{% endif %}
-        >
-          <ul class="ekko-featured-collection__list ekko-featured-collection__list--{{ section.settings.layout_mode }}" role="list" data-list>
+        <div class="ekko-featured-collection__carousel-shell{% if section.settings.show_progress_bar %} ekko-featured-collection__carousel-shell--progress{% else %} ekko-featured-collection__carousel-shell--floating{% endif %}">
+          <div
+            id="FeaturedCollectionViewport-{{ section.id }}"
+            class="ekko-featured-collection__viewport"
+            data-viewport
+            role="region"
+            aria-label="{{ slider_label | escape }}"
+            {% if desktop_carousel or section.settings.swipe_on_mobile %}tabindex="0"{% endif %}
+          >
+            <ul class="ekko-featured-collection__list ekko-featured-collection__list--{{ section.settings.layout_mode }}" role="list" data-list>
             {%- for product in product_source limit: section.settings.product_limit -%}
               {%- liquid
                 assign lazy_load = true
@@ -156,13 +158,32 @@
                   {%- render 'product-card-placeholder',
                     image_ratio: settings.product_image_ratio,
                     show_vendor: settings.product_vendor,
+                    show_rating: settings.product_rating,
                     text_alignment: settings.card_text_alignment,
                     placeholder: placeholder
                   -%}
                 </li>
               {%- endfor -%}
             {%- endfor -%}
-          </ul>
+            </ul>
+          </div>
+
+          {%- if desktop_carousel -%}
+            <div class="ekko-featured-collection__controls{% if section.settings.show_progress_bar %} ekko-featured-collection__controls--progress{% else %} ekko-featured-collection__controls--floating{% endif %}" data-controls>
+              <button class="button button--secondary" type="button" data-previous aria-controls="FeaturedCollectionViewport-{{ section.id }}" aria-label="{{ 'general.pagination.previous' | t | escape }}" disabled>
+                <span class="btn-fill" data-fill></span>
+                <span class="btn-text">{%- render 'icon', icon: 'chevron-left', class: 'transform' -%}</span>
+              </button>
+              {%- if section.settings.show_progress_bar -%}
+                <span class="ekko-featured-collection__progress" aria-hidden="true"><span data-progress></span></span>
+              {%- endif -%}
+              <button class="button button--secondary" type="button" data-next aria-controls="FeaturedCollectionViewport-{{ section.id }}" aria-label="{{ 'general.pagination.next' | t | escape }}">
+                <span class="btn-fill" data-fill></span>
+                <span class="btn-text">{%- render 'icon', icon: 'chevron-right', class: 'transform' -%}</span>
+              </button>
+              <span class="sr-only" aria-live="polite" data-status></span>
+            </div>
+          {%- endif -%}
         </div>
       </div>
     </div>
@@ -249,16 +270,81 @@
   .ekko-featured-collection__header[data-align='center'] .ekko-featured-collection__description { margin-inline: auto; }
   .ekko-featured-collection__header[data-align='right'] .ekko-featured-collection__description { margin-inline-start: auto; }
 
-  .ekko-featured-collection__actions,
-  .ekko-featured-collection__controls {
+  .ekko-featured-collection__actions {
     display: flex;
     align-items: center;
-    gap: .75rem;
     flex-shrink: 0;
   }
 
+  .ekko-featured-collection__view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: .75rem;
+    color: inherit;
+    font-weight: 650;
+    line-height: 1.2;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .ekko-featured-collection__view-all-text {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .ekko-featured-collection__view-all:not(.button) .ekko-featured-collection__view-all-text {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 100% 100%;
+    background-repeat: no-repeat;
+    background-size: 0 1px;
+    transition: background-size 250ms ease, background-position 0s 250ms;
+  }
+
+  .ekko-featured-collection__view-all-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: none;
+    border: 1px solid rgb(var(--color-foreground) / .18);
+    border-radius: 50%;
+    transition: color 250ms ease, background-color 250ms ease, transform 250ms ease;
+  }
+
+  .ekko-featured-collection__view-all.button .ekko-featured-collection__view-all-icon {
+    width: auto;
+    height: auto;
+    border: 0;
+    border-radius: 0;
+  }
+
+  @media screen and (pointer: fine) {
+    .ekko-featured-collection__view-all:not(.button):hover .ekko-featured-collection__view-all-text {
+      background-position: 0 100%;
+      background-size: 100% 1px;
+    }
+
+    .ekko-featured-collection__view-all:not(.button):hover .ekko-featured-collection__view-all-icon {
+      color: rgb(var(--color-background));
+      background: rgb(var(--color-foreground));
+      transform: translateX(.2rem);
+    }
+  }
+
+  .ekko-featured-collection__carousel-shell {
+    position: relative;
+    min-width: 0;
+  }
+
   .ekko-featured-collection__controls { display: none; }
-  .ekko-featured-collection[data-overflow] .ekko-featured-collection__controls { display: flex; }
+  .ekko-featured-collection[data-overflow] .ekko-featured-collection__controls--progress {
+    display: grid;
+    grid-template-columns: auto minmax(4rem, 1fr) auto;
+    align-items: center;
+    gap: .75rem;
+    margin-block-start: clamp(1.5rem, 3vw, 2.5rem);
+  }
 
   .ekko-featured-collection__controls .button {
     width: 2.75rem;
@@ -271,7 +357,7 @@
 
   .ekko-featured-collection__progress {
     position: relative;
-    width: clamp(2.5rem, 5vw, 5rem);
+    width: 100%;
     height: 2px;
     overflow: hidden;
     border-radius: 999px;
@@ -288,6 +374,36 @@
   }
 
   [dir='rtl'] .ekko-featured-collection__progress > span { transform-origin: right center; }
+
+  @media screen and (min-width: 990px) {
+    .ekko-featured-collection[data-overflow] .ekko-featured-collection__controls--floating {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: block;
+      pointer-events: none;
+    }
+
+    .ekko-featured-collection__controls--floating .button {
+      position: absolute;
+      inset-block-start: 50%;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: auto;
+      transform: translateY(-50%) scale(.82);
+      transition: opacity 180ms ease, visibility 180ms ease, transform 180ms ease;
+    }
+
+    .ekko-featured-collection__controls--floating [data-previous] { inset-inline-start: 1rem; }
+    .ekko-featured-collection__controls--floating [data-next] { inset-inline-end: 1rem; }
+
+    .ekko-featured-collection__carousel-shell:hover .ekko-featured-collection__controls--floating .button:not(:disabled),
+    .ekko-featured-collection__carousel-shell:focus-within .ekko-featured-collection__controls--floating .button:not(:disabled) {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(-50%) scale(1);
+    }
+  }
 
   .ekko-featured-collection__viewport {
     min-width: 0;
@@ -323,10 +439,7 @@
     .ekko-featured-collection__header[data-align='center'] { align-items: center; }
     .ekko-featured-collection__header[data-align='right'] { align-items: flex-end; }
 
-    .ekko-featured-collection__actions {
-      justify-content: space-between;
-      width: 100%;
-    }
+    .ekko-featured-collection__controls { display: none !important; }
 
     .ekko-featured-collection[data-mobile-swipe='true'] .ekko-featured-collection__viewport {
       overflow-x: auto;
@@ -509,11 +622,14 @@
     { "type": "range", "id": "product_limit", "label": "t:sections.global.settings.product_limit.label", "min": 2, "max": 12, "step": 1, "default": 8 },
     { "type": "header", "content": "t:sections.featured-collection.settings.layout.header" },
     { "type": "select", "id": "layout_mode", "label": "t:sections.featured-collection.settings.layout_mode.label", "options": [{ "value": "grid", "label": "t:sections.featured-collection.options.grid" }, { "value": "carousel", "label": "t:sections.featured-collection.options.carousel" }, { "value": "spotlight", "label": "t:sections.featured-collection.options.spotlight" }], "default": "carousel" },
+    { "type": "checkbox", "id": "show_progress_bar", "label": "t:sections.featured-collection.settings.show_progress_bar.label", "default": false, "visible_if": "{{ section.settings.layout_mode == 'carousel' }}" },
     { "type": "range", "id": "columns", "label": "t:sections.global.settings.columns.label", "min": 2, "max": 5, "step": 1, "default": 4 },
     { "type": "range", "id": "card_gap", "label": "t:sections.featured-collection.settings.card_gap.label", "min": 8, "max": 48, "step": 2, "unit": "px", "default": 24 },
     { "type": "select", "id": "header_layout", "label": "t:sections.featured-collection.settings.header_layout.label", "options": [{ "value": "top", "label": "t:sections.featured-collection.options.header_top" }, { "value": "side", "label": "t:sections.featured-collection.options.header_side" }], "default": "top" },
     { "type": "range", "id": "side_header_width", "label": "t:sections.featured-collection.settings.side_header_width.label", "min": 240, "max": 440, "step": 10, "unit": "px", "default": 320, "visible_if": "{{ section.settings.header_layout == 'side' }}" },
     { "type": "checkbox", "id": "show_view_all", "label": "t:sections.featured-collection.settings.show_view_all.label", "info": "t:sections.featured-collection.settings.show_view_all.info", "default": true },
+    { "type": "text", "id": "view_all_label", "label": "t:sections.featured-collection.settings.view_all_label.label", "default": "View all", "visible_if": "{{ section.settings.show_view_all == true }}" },
+    { "type": "url", "id": "view_all_link", "label": "t:sections.featured-collection.settings.view_all_link.label", "info": "t:sections.featured-collection.settings.view_all_link.info", "visible_if": "{{ section.settings.show_view_all == true }}" },
     { "type": "select", "id": "view_all_style", "label": "t:sections.featured-collection.settings.view_all_style.label", "options": [{ "value": "link", "label": "t:sections.featured-collection.options.link" }, { "value": "button", "label": "t:sections.featured-collection.options.button" }], "default": "link" },
     { "type": "header", "content": "t:sections.global.settings.header__mobile.content" },
     { "type": "select", "id": "columns_mobile", "label": "t:sections.global.settings.columns_mobile.label", "options": [{ "value": "1", "label": "t:sections.global.settings.columns_mobile.options__1.label" }, { "value": "2", "label": "t:sections.global.settings.columns_mobile.options__2.label" }], "default": "1" },
