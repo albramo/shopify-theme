@@ -163,6 +163,32 @@
     }
   },
   "sections": {
+    "horizontal_card_carousel": {
+      "region_label": "Horizontal card carousel",
+      "status": "Card {{ current }} of {{ total }}"
+    },
+    "product_set_builder": {
+      "features": "Step features",
+      "required": "Required",
+      "selected_count": "{{ count }} selected",
+      "selection_limit": "Select up to {{ limit }} items in this step.",
+      "select_products": "Select products to build your set.",
+      "complete_required": "Complete the required steps to add this set.",
+      "total": "Total",
+      "select": "Select",
+      "selected": "Selected",
+      "choose_options": "Choose options",
+      "change_options": "Change",
+      "choose_options_for": "Choose options for {{ product }}",
+      "select_product": "Select {{ product }}",
+      "loading_options": "Loading product options…",
+      "confirm_selection": "Confirm selection",
+      "choose_products_admin": "Choose products or a collection in this step's settings.",
+      "example_product": "Example product",
+      "adding": "Adding set…",
+      "added": "Set added to cart",
+      "cart_error": "Unable to add this set. Please try again."
+    },
     "blog_posts": {
       "view_all": "View all"
     },
@@ -171,7 +197,8 @@
       "view_all_label": "View all products in the {{ collection_name }} collection"
     },
     "collection_list": {
-      "view_all": "View all"
+      "view_all": "View all",
+      "items_count": "{{ count }} items"
     },
     "map": {
       "back": "Back",
@@ -479,6 +506,8 @@
       "shop_the_look": "Shop the Look",
       "vendor": "Vendor",
       "include_taxes": "Tax included.",
+      "taxes_and_shipping_at_checkout": "Taxes and shipping calculated at checkout.",
+      "taxes_and_shipping_policy_html": "Taxes and <a href='{{ link }}'>shipping</a> calculated at checkout.",
       "shipping_policy_html": "<a href='{{ link }}'>Shipping</a> calculated at checkout.",
       "will_not_ship_until": "Ready to ship {{ date }}",
       "will_be_in_stock_after": "Back in stock {{ date }}",
@@ -488,6 +517,16 @@
       "read_more": "View full details",
       "quick_add": "Add",
       "quick_view": "View"
+    },
+    "coupon": {
+      "applying": "Updating coupon…",
+      "applied": "Coupon applied.",
+      "removed": "Coupon removed.",
+      "error": "The coupon could not be updated. Please try again.",
+      "configure_code": "Add a discount code to activate this offer."
+    },
+    "feature_capsules": {
+      "empty_state": "Connect a list-of-metaobjects product metafield. Supported fields include label, short_label, icon, custom_icon, and accent_color."
     },
     "price": {
       "regular_price": "Regular price",

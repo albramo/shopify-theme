@@ -1,5 +1,365 @@
 {
+  "blocks": {
+    "horizontal_carousel_card": {
+      "name": "Horizontal carousel card",
+      "source_type": "Content source",
+      "custom": "Custom",
+      "product_source": "Product",
+      "collection_source": "Collection",
+      "product": "Product",
+      "collection": "Collection",
+      "media": "Media",
+      "media_type": "Media type",
+      "image": "Image",
+      "image_info": "Overrides the selected product or collection image.",
+      "image_alt": "Image alt text",
+      "video": "Video",
+      "video_url": "YouTube or Vimeo URL",
+      "video_autoplay": "Autoplay video",
+      "video_loop": "Loop video",
+      "image_fit": "Media fit",
+      "cover": "Cover",
+      "contain": "Contain",
+      "media_position": "Media position",
+      "media_width_mode": "Media width",
+      "media_width": "Custom media width",
+      "mobile_media_width_mode": "Mobile media width",
+      "mobile_media_width": "Custom mobile media width",
+      "auto": "Auto",
+      "left": "Left",
+      "right": "Right",
+      "mobile_layout": "Mobile card layout",
+      "stacked": "Stacked",
+      "horizontal": "Horizontal compact",
+      "mobile_image_ratio": "Mobile image ratio",
+      "content": "Content",
+      "badge": "Badge",
+      "subheading": "Subheading",
+      "heading": "Heading",
+      "text": "Text",
+      "show_price": "Show price",
+      "button_label": "Button label",
+      "link": "Link",
+      "link_info": "Overrides the selected product or collection link.",
+      "button_style": "Button style",
+      "solid": "Solid",
+      "text_link": "Text link",
+      "content_position": "Content position",
+      "top": "Top",
+      "center": "Center",
+      "bottom": "Bottom",
+      "colors": "Colors",
+      "background": "Card background",
+      "media_background": "Media background",
+      "text_color": "Text color",
+      "accent_color": "Accent color"
+    },
+    "product_builder_step": {
+      "name": "Product builder step",
+      "step": "Step",
+      "heading": "Heading",
+      "description": "Description",
+      "open_by_default": "Open by default",
+      "required": "Required step",
+      "selection_mode": "Selection mode",
+      "single": "Single selection",
+      "multiple": "Multiple selection",
+      "selection_limit": "Maximum selections",
+      "products": "Products",
+      "source_type": "Product source",
+      "manual": "Manual products",
+      "collection_source": "Collection",
+      "manual_products": "Products",
+      "collection": "Collection",
+      "product_limit": "Products to show",
+      "features": "Feature labels",
+      "feature_1": "Feature 1",
+      "feature_2": "Feature 2",
+      "feature_3": "Feature 3"
+    },
+    "product_feature_capsules": {
+      "name": "Product feature capsules",
+      "presets": { "name": "Product feature capsules" },
+      "settings": {
+        "intro": "Displays every entry from a list-of-metaobjects product metafield. Capsules wrap naturally and are never limited or hidden.",
+        "source": "Data source",
+        "metafield": "Custom metafield",
+        "metafield_info": "Enter namespace.key for a list of metaobject references.",
+        "layout": "Layout",
+        "style": "Style",
+        "size": "Size",
+        "alignment": "Alignment",
+        "packing": "Line packing",
+        "compact_mobile": "Use compact packing on mobile",
+        "show_icons": "Show icons",
+        "use_short_mobile": "Use short labels on mobile",
+        "allow_item_colors": "Allow individual Metaobject accent colors",
+        "column_gap": "Horizontal gap",
+        "row_gap": "Vertical gap",
+        "colors": "Colors",
+        "background": "Capsule background",
+        "icon_color": "Icon color",
+        "text_color": "Text color",
+        "spacing": "Spacing",
+        "padding_top": "Top padding",
+        "padding_bottom": "Bottom padding"
+      },
+      "options": {
+        "global": "Theme settings metafield",
+        "custom": "Custom metafield",
+        "tinted": "Soft tinted",
+        "outline": "Outline",
+        "neutral": "Neutral",
+        "compact": "Compact",
+        "standard": "Standard",
+        "large": "Large",
+        "left": "Left",
+        "center": "Center",
+        "right": "Right",
+        "natural": "Natural order",
+        "compact_packing": "Compact fill"
+      }
+    },
+    "buyer_protection": {
+      "name": "Buyer protection",
+      "presets": { "name": "Buyer protection" },
+      "settings": {
+        "content": "Content",
+        "heading": "Heading",
+        "text": "Description",
+        "show_arrow": "Show arrow",
+        "show_header_icon": "Show shield icon",
+        "show_descriptions": "Show descriptions in compact style",
+        "card_show_descriptions": "Show descriptions in card style",
+        "link_label": "Accessible link label",
+        "link": "Header link",
+        "layout": "Layout",
+        "style": "Style",
+        "item_layout": "Protection item layout",
+        "spacing": "Spacing",
+        "item_icon_size": "Item icon size",
+        "corner_radius": "Corner radius",
+        "carousel": "Carousel",
+        "carousel_desktop_items": "Items per view on desktop",
+        "carousel_mobile_items": "Items per view on mobile",
+        "carousel_scroll_amount": "Scroll amount",
+        "carousel_show_navigation": "Show navigation arrows",
+        "carousel_show_progress": "Show progress bar",
+        "carousel_loop": "Loop carousel",
+        "carousel_autoplay": "Auto-rotate items",
+        "carousel_speed": "Change items every",
+        "colors": "Colors",
+        "background": "Background",
+        "card_background": "Card background",
+        "item_background": "Protection item background",
+        "text_color": "Text",
+        "muted_color": "Secondary text",
+        "accent_color": "Icons and arrow",
+        "icon_background": "Icon background"
+      },
+      "options": {
+        "list": "Inline",
+        "grid": "Two-column grid",
+        "carousel": "Carousel",
+        "auto": "Auto",
+        "one_item": "One item",
+        "one_page": "One page",
+        "compact_row": "Compact row",
+        "protection_cards": "Protection cards",
+        "compact": "Compact",
+        "comfortable": "Comfortable"
+      }
+    },
+    "buyer_protection_item": {
+      "name": "Protection item",
+      "presets": { "name": "Protection item" },
+      "settings": {
+        "heading": "Heading",
+        "text": "Description",
+        "icon": "Icon",
+        "custom_icon": "Custom icon",
+        "link_label": "Link label",
+        "link": "Link"
+      },
+      "options": {
+        "shield": "Shield",
+        "lock": "Lock",
+        "return": "Returns",
+        "package": "Delivery",
+        "verified": "Verified",
+        "support": "Support",
+        "payment": "Payment"
+      }
+    },
+    "product_coupon": {
+      "name": "Product coupon",
+      "presets": { "name": "Product coupon" },
+      "settings": {
+        "selection_mode": "Coupon selection",
+        "hide_ineligible": "Hide unavailable offers",
+        "accessibility_label": "Accessibility label",
+        "colors": "Colors",
+        "background": "Background",
+        "selected_background": "Selected background",
+        "text_color": "Text",
+        "muted_color": "Secondary text",
+        "border_color": "Border",
+        "accent_color": "Selected accent",
+        "badge_background": "Offer badge background",
+        "badge_color": "Offer badge text",
+        "corner_radius": "Corner radius"
+      },
+      "options": {
+        "single": "One coupon at a time",
+        "multiple": "Allow multiple coupons"
+      }
+    },
+    "coupon_offer": {
+      "name": "Coupon offer",
+      "presets": { "name": "Coupon offer" },
+      "settings": {
+        "content": "Offer",
+        "value_label": "Offer label",
+        "apply_text": "Not applied text",
+        "applied_text": "Applied text",
+        "code": "Discount code",
+        "variants": "Variant eligibility",
+        "variant_rule": "Variant rule",
+        "variant_values": "Variant IDs or exact titles",
+        "variant_values_info": "Enter one value per line, or separate values with commas.",
+        "variant_unavailable_text": "Unavailable variant message",
+        "countries": "Country eligibility",
+        "country_rule": "Country rule",
+        "country_codes": "Country codes",
+        "country_codes_info": "Use two-letter ISO codes, such as US, CA, or GB.",
+        "country_unavailable_text": "Unavailable country message",
+        "countdown": "Countdown",
+        "countdown_mode": "Countdown type",
+        "countdown_label": "Countdown label",
+        "ends_at": "End date and time",
+        "ends_at_info": "Use ISO 8601 with a timezone, for example 2026-12-31T23:59:00+08:00.",
+        "duration_minutes": "Minutes from first visit",
+        "expired_text": "Expired message"
+      },
+      "options": {
+        "all_variants": "All variants",
+        "include_variants": "Only listed variants",
+        "exclude_variants": "All except listed variants",
+        "all_countries": "All countries",
+        "include_countries": "Only listed countries",
+        "exclude_countries": "All except listed countries",
+        "no_countdown": "No countdown",
+        "fixed_countdown": "Fixed end time",
+        "evergreen_countdown": "From the visitor's first view"
+      }
+    }
+  },
   "sections": {
+    "horizontal_card_carousel": {
+      "name": "Horizontal card carousel",
+      "header": "Header",
+      "subheading": "Subheading",
+      "heading": "Heading",
+      "heading_tag": "Heading tag",
+      "description": "Description",
+      "heading_alignment": "Heading alignment",
+      "header_content_width": "Header content width",
+      "carousel": "Carousel",
+      "card_width": "Card width on desktop",
+      "card_height": "Card height on desktop",
+      "card_width_mobile": "Card width on mobile",
+      "side_card_scale": "Side card scale",
+      "card_gap": "Card gap on desktop",
+      "card_gap_mobile": "Card gap on mobile",
+      "card_radius": "Card corner radius",
+      "content_padding": "Content padding on desktop",
+      "content_padding_mobile": "Content padding on mobile",
+      "show_arrows": "Show desktop arrows",
+      "show_mobile_arrows": "Show mobile arrows",
+      "show_progress": "Show progress bar",
+      "show_counter": "Show card counter",
+      "loop": "Loop cards",
+      "autoplay": "Auto-rotate cards",
+      "autoplay_speed": "Change cards every",
+      "pause_on_hover": "Pause on hover",
+      "layout": "Layout",
+      "content_width": "Content width",
+      "page_width": "Page width",
+      "full_width": "Full width",
+      "custom_width": "Custom",
+      "custom_content_width": "Custom content width",
+      "colors": "Colors",
+      "background": "Section background",
+      "text_color": "Header text color",
+      "spacing": "Spacing",
+      "padding_top": "Top padding",
+      "padding_bottom": "Bottom padding"
+    },
+    "product_set_builder": {
+      "name": "Build your set",
+      "header": "Header",
+      "subheading": "Subheading",
+      "heading": "Heading",
+      "heading_tag": "Heading tag",
+      "description": "Description",
+      "heading_alignment": "Heading alignment",
+      "header_content_width": "Header content width",
+      "behavior": "Builder behavior",
+      "exclusive_accordion": "Keep only one step open",
+      "auto_advance": "Open the next step after a single selection",
+      "sticky_summary": "Keep summary visible while scrolling",
+      "show_selected_previews": "Show selected product previews",
+      "summary_heading": "Summary heading",
+      "button_label": "Add button label",
+      "products": "Product cards",
+      "desktop_layout": "Desktop layout",
+      "grid": "Grid",
+      "carousel": "Carousel",
+      "columns_desktop": "Products per row on desktop",
+      "card_size_desktop": "Product card size on desktop",
+      "card_size_compact": "Compact",
+      "card_size_standard": "Standard",
+      "card_size_large": "Large",
+      "card_size_custom": "Custom",
+      "card_width_mobile": "Product card width on mobile",
+      "card_max_width_desktop": "Maximum product card width on desktop",
+      "media_height_desktop": "Product media height on desktop",
+      "media_height_mobile": "Product media height on mobile",
+      "image_ratio": "Image ratio",
+      "square": "Square",
+      "portrait": "Portrait",
+      "landscape": "Landscape",
+      "image_fit": "Image fit",
+      "contain": "Contain",
+      "cover": "Cover",
+      "show_vendor": "Show product vendor",
+      "show_swatches": "Show product swatches",
+      "card_gap": "Desktop card spacing",
+      "card_gap_mobile": "Mobile card spacing",
+      "panel_radius": "Step corner radius",
+      "card_radius": "Product card corner radius",
+      "layout": "Layout",
+      "content_width": "Content width",
+      "page_width": "Page width",
+      "full_width": "Full width",
+      "custom_width": "Custom",
+      "custom_content_width": "Custom content width",
+      "colors": "Colors",
+      "background": "Section background",
+      "text_color": "Section text",
+      "panel_background": "Collapsed step background",
+      "active_panel_background": "Open step background",
+      "card_background": "Product card background",
+      "card_text_color": "Product card text",
+      "media_background": "Product media background",
+      "selected_background": "Selected product background",
+      "selection_color": "Selected product accent",
+      "accent_color": "Accent color",
+      "accent_text_color": "Accent text color",
+      "spacing": "Spacing",
+      "padding_top": "Top padding",
+      "padding_bottom": "Bottom padding"
+    },
     "logo_list": {
       "name": "Logo list",
       "presets": { "name": "Logo list" },
@@ -1169,6 +1529,7 @@
       "settings": {
         "layout_header": "Cards and layout",
         "image_source": "Default image source",
+        "feature_first_card": "Feature the first card",
         "card_presentation": "Card style",
         "card_content_alignment": "Card content alignment",
         "card_background": "Card background",
@@ -1176,7 +1537,10 @@
         "gap": "Desktop card spacing",
         "gap_mobile": "Mobile card spacing",
         "show_products_count": "Show product count",
+        "card_link_label": "Card link label",
         "show_arrow": "Show arrow",
+        "view_all_label": "View all label",
+        "view_all_link": "View all link",
         "mobile_card_layout": "Mobile card layout",
         "mobile_card_width": "Mobile swipe card width",
         "mobile_heading_width": "Mobile heading width",
@@ -1185,15 +1549,15 @@
         "reveal_on_scroll": "Reveal cards on scroll",
         "show_view_all": {
           "label": "Enable \"View all\" button",
-          "info": "If list includes more collections than shown."
+          "info": "Shows an optional link in the section header."
         }
       },
       "options": {
         "collection_image": "Collection image",
         "first_product_image": "First product image",
-        "minimal": "Minimal",
-        "surface": "Surface",
-        "editorial": "Editorial inset",
+        "minimal": "Clean card",
+        "surface": "Edge-to-edge media",
+        "editorial": "Inset media",
         "mobile_vertical": "Vertical",
         "mobile_compact": "Compact vertical",
         "mobile_horizontal": "Horizontal",
@@ -1202,8 +1566,17 @@
         "custom_width": "Custom"
       },
       "blocks": {
-        "collection": {
+        "shared": {
+          "image_alt": "Image alt text",
+          "label": "Card label",
           "overlay_content": "Overlay content on image"
+        },
+        "custom_category": {
+          "name": "Custom category",
+          "link": "Category link",
+          "link_info": "Use a collection, page, or filtered collection URL.",
+          "count_text": "Count text",
+          "count_text_info": "Optional manual value such as 12, 20+, or New."
         }
       },
       "presets": {
@@ -1630,6 +2003,9 @@
         "layout_mode": {
           "label": "Desktop layout"
         },
+        "show_progress_bar": {
+          "label": "Show carousel progress bar"
+        },
         "card_gap": {
           "label": "Desktop card spacing"
         },
@@ -1644,7 +2020,14 @@
         },
         "show_view_all": {
           "label": "Enable \"View all\" button",
-          "info": "If collection has more products than shown."
+          "info": "Uses the selected collection link unless a custom link is set."
+        },
+        "view_all_label": {
+          "label": "View all label"
+        },
+        "view_all_link": {
+          "label": "View all link",
+          "info": "Leave blank to use the selected collection URL."
         },
         "view_all_style": {
           "label": "View all style"
@@ -4957,6 +5340,18 @@
           "label": "Show product rating",
           "info": "To display a rating, add a product rating app."
         },
+        "rating_position": {
+          "label": "Rating position",
+          "options__1": {
+            "label": "Above title"
+          },
+          "options__2": {
+            "label": "Below title"
+          },
+          "options__3": {
+            "label": "Below price"
+          }
+        },
         "show_countdown": {
           "label": "Show countdown timer",
           "info": "To configure a countdown timer for your products, please follow the steps outlined in [this tutorial](https://shopifysellers.com/)."
@@ -5005,6 +5400,75 @@
           },
           "label": "Savings display style"
         },
+        "header__feature_capsules": {
+          "content": "Feature capsules",
+          "info": "Display every entry from a list-of-metaobjects product metafield as compact feature capsules. Entries wrap naturally and are never limited or hidden."
+        },
+        "product_feature_capsules": {
+          "label": "Show feature capsules"
+        },
+        "product_feature_capsules_metafield": {
+          "label": "Feature metafield",
+          "info": "Enter namespace.key for a list of metaobject references. Supported fields include label, short_label, icon, custom_icon, and accent_color."
+        },
+        "product_feature_capsules_position": {
+          "label": "Position",
+          "options__1": { "label": "Above title" },
+          "options__2": { "label": "Below title" },
+          "options__3": { "label": "Below rating" },
+          "options__4": { "label": "Below price" },
+          "options__5": { "label": "Below swatches" },
+          "options__6": { "label": "Above icon list" }
+        },
+        "product_feature_capsules_style": {
+          "label": "Style",
+          "options__1": { "label": "Soft tinted" },
+          "options__2": { "label": "Outline" },
+          "options__3": { "label": "Neutral" }
+        },
+        "product_feature_capsules_size": {
+          "label": "Size",
+          "options__1": { "label": "Compact" },
+          "options__2": { "label": "Standard" }
+        },
+        "product_feature_capsules_alignment": {
+          "label": "Alignment",
+          "options__1": { "label": "Left" },
+          "options__2": { "label": "Center" },
+          "options__3": { "label": "Right" }
+        },
+        "product_feature_capsules_packing": {
+          "label": "Line packing",
+          "options__1": { "label": "Natural order" },
+          "options__2": { "label": "Compact fill" }
+        },
+        "product_feature_capsules_compact_mobile": {
+          "label": "Use compact packing on mobile"
+        },
+        "product_feature_capsules_show_icons": {
+          "label": "Show icons"
+        },
+        "product_feature_capsules_short_mobile": {
+          "label": "Use short labels on mobile"
+        },
+        "product_feature_capsules_item_colors": {
+          "label": "Allow individual Metaobject accent colors"
+        },
+        "product_feature_capsules_background": {
+          "label": "Capsule background"
+        },
+        "product_feature_capsules_icon": {
+          "label": "Icon color"
+        },
+        "product_feature_capsules_text": {
+          "label": "Text color"
+        },
+        "product_feature_capsules_column_gap": {
+          "label": "Horizontal gap"
+        },
+        "product_feature_capsules_row_gap": {
+          "label": "Vertical gap"
+        },
         "header__icon_list": {
           "content": "Icon list",
           "info": "Use dynamic sources to highlight unique attributes by creating product metafield for the icon list. [Learn more](https://shopifysellers.com/)"
@@ -5021,6 +5485,26 @@
         },
         "product_icon_list_carousel": {
           "label": "Enable carousel on desktop"
+        },
+        "product_icon_list_packing": {
+          "label": "Line packing",
+          "options__1": { "label": "Natural order" },
+          "options__2": { "label": "Compact fill" }
+        },
+        "product_icon_list_compact_mobile": {
+          "label": "Use compact packing on mobile"
+        },
+        "product_icon_list_alignment": {
+          "label": "Alignment",
+          "options__1": { "label": "Left" },
+          "options__2": { "label": "Center" },
+          "options__3": { "label": "Right" }
+        },
+        "product_icon_list_column_gap": {
+          "label": "Horizontal gap"
+        },
+        "product_icon_list_row_gap": {
+          "label": "Vertical gap"
         },
         "product_icon_list_carousel_speed": {
           "label": "Carousel speed (pixels per second)"

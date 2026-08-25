@@ -16,10 +16,13 @@
           "type": "product-breadcrumb",
           "settings": {}
         },
+        "vendor": {
+          "type": "product-vendor",
+          "settings": {}
+        },
         "title": {
           "type": "product-title",
           "settings": {
-            "limit_width": false,
             "text_wrap": "normal"
           }
         },
@@ -48,6 +51,62 @@
           "type": "product-description",
           "settings": {}
         },
+        "notice": {
+          "type": "product-notice",
+          "settings": {
+            "link": "/collections/all"
+          }
+        },
+        "coupon": {
+          "type": "product-coupon",
+          "settings": {},
+          "blocks": {
+            "offer": {
+              "type": "_product-coupon-offer",
+              "settings": {
+                "value_label": "$80 OFF",
+                "apply_text": "Save $80 on this order",
+                "applied_text": "$80 discount applied",
+                "code": "SAVE80"
+              }
+            }
+          },
+          "block_order": ["offer"]
+        },
+        "coupon_pack": {
+          "type": "product-coupon-pack",
+          "settings": {},
+          "blocks": {
+            "coupon_1": {
+              "type": "_product-coupon-pack-item",
+              "settings": {
+                "code": "WELCOME50",
+                "badge": "New user",
+                "heading": "50% allowance",
+                "condition": "Orders over US$0.01, max. US$4.00"
+              }
+            },
+            "coupon_2": {
+              "type": "_product-coupon-pack-item",
+              "settings": {
+                "code": "WELCOME6",
+                "badge": "New user",
+                "heading": "US$6.00 allowance",
+                "condition": "Orders over US$40.00"
+              }
+            },
+            "coupon_3": {
+              "type": "_product-coupon-pack-item",
+              "settings": {
+                "code": "WELCOME12",
+                "badge": "New user",
+                "heading": "US$12.00 allowance",
+                "condition": "Orders over US$100.00"
+              }
+            }
+          },
+          "block_order": ["coupon_1", "coupon_2", "coupon_3"]
+        },
         "variants": {
           "type": "product-variant-picker",
           "settings": {}
@@ -61,6 +120,38 @@
           "settings": {
             "show_quantity_selector": false
           }
+        },
+        "buyer_protection": {
+          "type": "product-buyer-protection",
+          "settings": {},
+
+          "blocks": {
+            "secure_payments": {
+              "type": "_product-buyer-protection-item",
+              "settings": {
+                "icon": "return",
+                "heading": "After Sales Assurance",
+                "text": "Support is available after your order has been delivered."
+              }
+            },
+            "money_back": {
+              "type": "_product-buyer-protection-item",
+              "settings": {
+                "icon": "lock",
+                "heading": "Secure Payment",
+                "text": "Payment information is encrypted and processed securely."
+              }
+            },
+            "delivery_protection": {
+              "type": "_product-buyer-protection-item",
+              "settings": {
+                "icon": "package",
+                "heading": "Refund for No Delivery",
+                "text": "Get support when an eligible order does not arrive."
+              }
+            }
+          },
+          "block_order": ["secure_payments", "money_back", "delivery_protection"]
         },
         "pickup": {
           "type": "product-pickup",
@@ -139,14 +230,19 @@
       },
       "block_order": [
         "breadcrumb",
+        "vendor",
         "title",
         "rating",
         "price",
         "inventory",
         "description",
+        "notice",
+        "coupon",
+        "coupon_pack",
         "variants",
         "quantity",
         "buy_buttons",
+        "buyer_protection",
         "pickup",
         "share",
         "details",
