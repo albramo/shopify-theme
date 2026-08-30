@@ -581,7 +581,11 @@ console.log(theme.settings.themeName + ' (' + theme.settings.themeVersion + ') b
 
   theme.isStorageSupported = function (type) {
     // Return false if we are in an iframe without access to sessionStorage
-    if (window.self !== window.top) {
+    try {
+      if (window.self !== window.top) {
+        return false;
+      }
+    } catch (error) {
       return false;
     }
 
