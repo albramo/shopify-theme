@@ -802,9 +802,12 @@
     flex-direction: column;
     height: auto !important;
     overflow: visible !important;
+    padding-inline: var(--sp-4);
+    padding-block-start: var(--sp-4);
   }
 
   .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__details {
+    padding-inline: 0;
     padding-block-end: max(var(--sp-12), calc(env(safe-area-inset-bottom) + 3rem));
   }
 }

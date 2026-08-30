@@ -10872,6 +10872,36 @@ details.active .drawer__promotions .mega-menu__item,
   opacity: 1;
 }
 
+@media screen and (max-width: 1023px) {
+  .quick-view .drawer__inner {
+    overflow: visible !important;
+  }
+
+  .quick-view .drawer__header {
+    position: static;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .quick-view .drawer__close {
+    position: fixed;
+    z-index: 50;
+    top: calc(10vh - 2rem);
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    margin: 0;
+    background-color: rgb(var(--color-button-background));
+    color: rgb(var(--color-button-text));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .quick-view[active] .drawer__close {
+    opacity: 1;
+  }
+}
+
 .quick-view .product__media-container .slider {
   border-radius: 0;
 }
