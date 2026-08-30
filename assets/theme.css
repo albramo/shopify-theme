@@ -10881,24 +10881,38 @@ details.active .drawer__promotions .mega-menu__item,
     position: static;
     opacity: 1 !important;
     visibility: visible !important;
+    min-height: 0;
+    padding: 0;
   }
 
   .quick-view .drawer__close {
-    position: fixed;
-    z-index: 50;
-    top: calc(10vh - 2rem);
-    bottom: auto;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    margin: 0;
-    background-color: rgb(var(--color-button-background));
-    color: rgb(var(--color-button-text));
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    position: absolute !important;
+    z-index: 60 !important;
+    top: -3rem !important;
+    bottom: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-width: 2.75rem !important;
+    min-height: 2.75rem !important;
+    padding: 0 !important;
+    border-radius: 9999px !important;
+    background-color: rgb(var(--color-button-background)) !important;
+    color: rgb(var(--color-button-text)) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .quick-view[active] .drawer__close {
-    opacity: 1;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 }
 
