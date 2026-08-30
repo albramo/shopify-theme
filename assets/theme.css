@@ -6443,7 +6443,7 @@ ol {
 
 .drawer__scrollable {
   scroll-behavior: smooth;
-  scroll-snap-type: y mandatory;
+  scroll-snap-type: none;
   scrollbar-color: auto;
   scrollbar-width: thin
 }
@@ -6830,7 +6830,10 @@ ol {
   }
 
   .js .cart-drawer .drawer__scrollable {
-    height: auto
+    height: auto;
+    max-height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .js .cart-drawer .modal .fixed-modal {
