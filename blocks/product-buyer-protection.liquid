@@ -122,7 +122,7 @@
     border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
     border-radius: max(0.75rem, var(--buyer-protection-radius, 12px));
     background: var(--buyer-protection-card-background, var(--buyer-protection-background, color-mix(in srgb, currentColor 2%, transparent)));
-    color: var(--buyer-protection-color);
+    color: var(--buyer-protection-color, inherit);
   }
 
   .ekko-buyer-protection--density-compact {
@@ -133,7 +133,7 @@
     padding: 1.1rem;
     overflow: hidden;
     border-radius: var(--buyer-protection-radius, 14px);
-    background: var(--buyer-protection-card-background);
+    background: var(--buyer-protection-card-background, #F1F8F4);
   }
 
   .ekko-buyer-protection--style-cards.ekko-buyer-protection--density-compact {
@@ -157,7 +157,7 @@
     height: 2.5rem;
     border-radius: 50%;
     background: var(--buyer-protection-icon-background, color-mix(in srgb, var(--buyer-protection-accent, currentColor) 12%, transparent));
-    color: var(--buyer-protection-accent);
+    color: var(--buyer-protection-accent, currentColor);
   }
 
   .ekko-buyer-protection__shield svg {
@@ -194,7 +194,7 @@
   }
 
   .ekko-buyer-protection__text {
-    color: var(--buyer-protection-muted);
+    color: var(--buyer-protection-muted, color-mix(in srgb, currentColor 70%, transparent));
     font-size: .78rem;
     line-height: 1.45;
   }
@@ -231,7 +231,7 @@
     place-items: center;
     width: 1.5rem;
     height: 1.5rem;
-    color: var(--buyer-protection-accent);
+    color: var(--buyer-protection-accent, currentColor);
   }
 
   .ekko-buyer-protection__arrow .icon {

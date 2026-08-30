@@ -297,8 +297,8 @@
     overflow: hidden;
     border: 0;
     border-radius: var(--coupon-pack-radius, 12px);
-    background: var(--coupon-pack-background);
-    color: var(--coupon-pack-color);
+    background: var(--coupon-pack-background, linear-gradient(90deg, #FF62C0, #FF4A5A));
+    color: var(--coupon-pack-color, #FFFFFF);
     text-align: start;
     cursor: pointer;
     transition: filter 180ms ease, box-shadow 180ms ease;
@@ -323,7 +323,7 @@
     max-width: 3rem;
     max-height: 3rem;
     flex: 0 0 3rem;
-    color: var(--coupon-pack-gift);
+    color: var(--coupon-pack-gift, #FFC33D);
   }
 
   .ekko-coupon-pack__gift svg,
@@ -371,8 +371,8 @@
     min-height: 2.75rem;
     padding: .55rem .9rem;
     border-radius: 999px;
-    background: var(--coupon-pack-button-background);
-    color: var(--coupon-pack-button-color);
+    background: var(--coupon-pack-button-background, #FFFFFF);
+    color: var(--coupon-pack-button-color, #F23B51);
     font-size: .875rem;
     font-weight: 650;
   }

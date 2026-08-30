@@ -69,7 +69,7 @@
     border-radius: max(.5rem, calc(var(--buyer-protection-radius, 12px) - .25rem));
     background: var(--buyer-protection-item-background, color-mix(in srgb, currentColor 3%, transparent));
     border: 1px solid color-mix(in srgb, currentColor 6%, transparent);
-    color: var(--buyer-protection-color);
+    color: var(--buyer-protection-color, inherit);
   }
 
   .ekko-buyer-protection-item__icon {
@@ -81,7 +81,7 @@
     margin-top: 0;
     border-radius: 50%;
     background: var(--buyer-protection-icon-background, color-mix(in srgb, var(--buyer-protection-accent, currentColor) 12%, transparent));
-    color: var(--buyer-protection-accent);
+    color: var(--buyer-protection-accent, currentColor);
   }
 
   .ekko-buyer-protection-item__icon svg,
@@ -136,7 +136,7 @@
     height: 2.35rem;
     margin-top: 0;
     border-radius: 50%;
-    background: var(--buyer-protection-icon-background);
+    background: var(--buyer-protection-icon-background, #DDF0E4);
   }
 
   .ekko-buyer-protection--style-cards .ekko-buyer-protection-item__heading {

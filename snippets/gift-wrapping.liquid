@@ -21,8 +21,8 @@
     items-in-cart="{{ items_in_cart }}"
     data-section-id="{{ section_id }}"
   >
-    <div class="flex gap-2 md:gap-3">
-      <div class="relative">
+    <div class="gift-wrapping__label-wrapper flex items-center gap-2 md:gap-3">
+      <div class="relative flex items-center shrink-0">
         <div class="loader absolute right-0" hidden>
           {%- render 'icon', icon: 'rotator', size: 'sm', class: 'animate-rotator' -%}
         </div>
@@ -34,7 +34,7 @@
           {%- if cart.attributes.gift-wrapping %} checked{% endif -%}
         />
       </div>
-      <label for="GiftWrap-{{ section_id }}" class="text-sm md:text-base leading-tight">
+      <label for="GiftWrap-{{ section_id }}" class="text-sm md:text-base leading-tight cursor-pointer">
         {%- liquid
           assign gift_price = gift_wrapping.object.price | money
           echo 'cart.gift_wrapping.message_html' | t : price: gift_price
