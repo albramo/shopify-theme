@@ -51,10 +51,34 @@ endif
                 endfor
               -%}
 
+              {%- liquid
+                assign link_title_clean = link.title | downcase
+                assign link_icon = 'arrow-right'
+                if link_title_clean contains 'home' or link_title_clean contains 'الرئيسية' or link_title_clean contains 'رئيسية'
+                  assign link_icon = 'home'
+                elsif link_title_clean contains 'shop' or link_title_clean contains 'store' or link_title_clean contains ' متجر' or link_title_clean contains 'منتجات' or link_title_clean contains 'تسوق' or link_title_clean contains 'catalog'
+                  assign link_icon = 'grid'
+                elsif link_title_clean contains 'about' or link_title_clean contains 'من نحن' or link_title_clean contains 'عنا'
+                  assign link_icon = 'info'
+                elsif link_title_clean contains 'contact' or link_title_clean contains 'اتصل' or link_title_clean contains 'تواصل'
+                  assign link_icon = 'email'
+                elsif link_title_clean contains 'blog' or link_title_clean contains 'مدونة' or link_title_clean contains 'أخبار'
+                  assign link_icon = 'blog'
+                elsif link_title_clean contains 'offer' or link_title_clean contains 'sale' or link_title_clean contains 'عروض' or link_title_clean contains 'تخفيضات'
+                  assign link_icon = 'tag'
+                elsif link_title_clean contains 'account' or link_title_clean contains 'حساب' or link_title_clean contains 'تسجيل'
+                  assign link_icon = 'account'
+                endif
+              -%}
               {%- if link.links != blank or enable_mega_menu -%}
-                {%- render 'header-nav-drawer', link: link, enable_mega_menu: enable_mega_menu, block: mega_menu_block, position: forloop.index -%}
+                {%- render 'header-nav-drawer', link: link, enable_mega_menu: enable_mega_menu, block: mega_menu_block, position: forloop.index, link_icon: link_icon -%}
               {%- else -%}
-                <a class="drawer__menu-item block heading text-2xl leading-none tracking-tight" href="{{ link.url }}">{{ link.title | escape }}</a>
+                <a class="drawer__menu-item flex items-center gap-3 heading text-xl leading-snug tracking-normal" href="{{ link.url }}">
+                  <span class="drawer__menu-item-icon inline-flex items-center justify-center shrink-0">
+                    {%- render 'icon', icon: link_icon, size: 'xs' -%}
+                  </span>
+                  <span class="drawer__menu-item-text grow">{{ link.title | escape }}</span>
+                </a>
               {%- endif -%}
             </li>
           {%- endfor -%}

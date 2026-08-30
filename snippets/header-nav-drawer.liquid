@@ -5,8 +5,13 @@
   endif
 -%}
 <details is="menu-details">
-  <summary class="drawer__menu-item block cursor-pointer relative" aria-expanded="false">
-    <button type="button" class="heading text-2xl leading-none tracking-tight"{% unless section_rendering_api %} is="api-button" data-id="DrawerSubMenu-{{ section.id }}-{{ position }}" data-section-id="{{ section.id }}"{% endunless %}>
+  <summary class="drawer__menu-item flex items-center gap-3 cursor-pointer relative" aria-expanded="false">
+    {%- if link_icon != blank -%}
+      <span class="drawer__menu-item-icon inline-flex items-center justify-center shrink-0">
+        {%- render 'icon', icon: link_icon, size: 'xs' -%}
+      </span>
+    {%- endif -%}
+    <button type="button" class="heading text-xl leading-snug tracking-normal grow text-start"{% unless section_rendering_api %} is="api-button" data-id="DrawerSubMenu-{{ section.id }}-{{ position }}" data-section-id="{{ section.id }}"{% endunless %}>
       {{- link.title | escape -}}
     </button>
   </summary>
