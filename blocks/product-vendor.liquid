@@ -1,6 +1,6 @@
 {% doc %}
-  Product vendor block shared by product surfaces.
-{% enddoc %}
+  Product vendor block shared by product surfaces with optional verified brand badge.
+{% doc %}
 
 {%- liquid
   assign product_item = section.settings.product | default: product
@@ -12,15 +12,26 @@
 
 {%- if vendor != blank -%}
   <div
-    class="ekko-product-block ekko-product-vendor ekko-product-vendor--{{ block.settings.text_style }}{% if block.settings.uppercase %} ekko-product-vendor--uppercase{% endif %}"
+    class="ekko-product-block ekko-product-vendor flex items-center gap-2 flex-wrap"
     data-align="{{ block.settings.alignment }}"
     data-mobile-align="{{ block.settings.alignment_mobile }}"
     style="--product-block-color: {{ block.settings.color }}; --product-vendor-size: {{ block.settings.font_size }}px;"
   >
-    {%- if block.settings.link_vendor and product_item != blank -%}
-      <a href="{{ vendor | url_for_vendor }}">{{ vendor | escape }}</a>
-    {%- else -%}
-      <span>{{ vendor | escape }}</span>
+    <div class="ekko-product-vendor__chip inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-700">
+      {%- if block.settings.link_vendor and product_item != blank -%}
+        <a href="{{ vendor | url_for_vendor }}" class="hover:underline">{{ vendor | escape }}</a>
+      {%- else -%}
+        <span>{{ vendor | escape }}</span>
+      {%- endif -%}
+    </div>
+
+    {%- if block.settings.show_verified_badge -%}
+      <div class="ekko-product-vendor__verified inline-flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+        <svg class="w-4 h-4 text-emerald-500 shrink-0 fill-current" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ block.settings.verified_text | default: 'Verified brand' | escape }}</span>
+      </div>
     {%- endif -%}
   </div>
 {%- endif -%}
@@ -31,8 +42,10 @@
   "settings": [
     { "type": "checkbox", "id": "link_vendor", "label": "Link to vendor", "default": true },
     { "type": "select", "id": "text_style", "label": "Style", "options": [{ "value": "eyebrow", "label": "Eyebrow" }, { "value": "body", "label": "Body" }], "default": "eyebrow" },
-    { "type": "checkbox", "id": "uppercase", "label": "Uppercase", "default": true },
+    { "type": "checkbox", "id": "uppercase", "label": "Uppercase", "default": false },
     { "type": "range", "id": "font_size", "label": "Text size", "min": 10, "max": 20, "step": 1, "unit": "px", "default": 12 },
+    { "type": "checkbox", "id": "show_verified_badge", "label": "Show verified brand badge", "default": true },
+    { "type": "text", "id": "verified_text", "label": "Verified badge text", "default": "Verified brand" },
     { "type": "text_alignment", "id": "alignment", "label": "Desktop alignment", "default": "left" },
     { "type": "select", "id": "alignment_mobile", "label": "Mobile alignment", "options": [{ "value": "inherit", "label": "Same as desktop" }, { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "inherit" },
     { "type": "color", "id": "color", "label": "Text color", "default": "#6B6B6B" }

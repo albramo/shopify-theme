@@ -1,5 +1,5 @@
 {%- comment -%}
-  Renders a list of product's price (regular, sale)
+  Renders a list of product's price (regular, sale) with optional save amount badge.
 
   Accepts:
   - product: {Object} Product Liquid object (optional)
@@ -7,6 +7,7 @@
   - placeholder: {Boolean} Renders a placeholder price (optional)
   - use_variant: {Boolean} Renders selected or first variant price instead of overall product pricing (optional)
   - show_badges: {Boolean} Renders 'Sale' and 'Sold Out' tags if the product matches the condition (optional)
+  - show_save_badge: {Boolean} Renders 'Save EGP 39' badge on sale (optional)
   - hide_unit_price: if set to true, unit pricing are hidden (optional)
   - skip_to_price: if set to true, quantity price breaks configured are hidden (optional)
   - class: {String} Adds a price class to the price element (optional)
@@ -29,6 +30,7 @@
   assign on_sale = false
   if compare_at_price > price
     assign on_sale = true
+    assign saved_amount = compare_at_price | minus: price
   endif
 -%}
 
@@ -40,7 +42,7 @@
     <span class="sr-only">{{ 'products.price.sale_price' | t }}</span>
   {%- endif -%}
 
-  <span class="price__regular whitespace-nowrap">
+  <span class="price__regular whitespace-nowrap text-2xl font-semibold">
     {%- liquid
       if product.quantity_price_breaks_configured? != true or skip_to_price
         if target == product and product.price_varies
@@ -70,7 +72,7 @@
 
   {%- if on_sale -%}
     <span class="sr-only">{{ 'products.price.regular_price' | t }}</span>
-    <span class="price__sale inline-flex items-center h-auto relative">
+    <span class="price__sale line-through text-neutral-400 font-normal inline-flex items-center h-auto relative">
       {%- liquid
         if settings.currency_code_enabled
           echo compare_at_price | money_with_currency
@@ -79,6 +81,16 @@
         endif
       -%}
     </span>
+
+    {%- if show_save_badge != false -%}
+      <span class="price__save-badge inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-950/40 text-rose-400 border border-rose-800/50">
+        {%- if settings.currency_code_enabled -%}
+          Save {{ saved_amount | money_with_currency }}
+        {%- else -%}
+          Save {{ saved_amount | money }}
+        {%- endif -%}
+      </span>
+    {%- endif -%}
   {%- endif -%}
 
   {%- unless hide_unit_price -%}

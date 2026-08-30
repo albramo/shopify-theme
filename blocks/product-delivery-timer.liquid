@@ -1,0 +1,159 @@
+{% doc %}
+  Product delivery estimate & countdown timer block.
+  Displays delivery date range and countdown timer boxes matching reference design.
+{% doc %}
+
+{%- liquid
+  assign cutoff_hours = block.settings.cutoff_hours | default: 5
+  assign cutoff_minutes = block.settings.cutoff_minutes | default: 12
+  assign start_days = block.settings.delivery_start_days | default: 2
+  assign end_days = block.settings.delivery_end_days | default: 3
+-%}
+
+<delivery-timer
+  class="ekko-product-block ekko-product-delivery-timer block my-2"
+  data-cutoff-hours="{{ cutoff_hours }}"
+  data-cutoff-minutes="{{ cutoff_minutes }}"
+  data-start-days="{{ start_days }}"
+  data-end-days="{{ end_days }}"
+>
+  <div class="delivery-timer__container p-4 md:p-5 rounded-2xl border border-amber-600/30 bg-gradient-to-br from-amber-950/40 to-amber-900/20 text-amber-100/90 shadow-sm relative overflow-hidden">
+    <div class="flex items-start gap-3.5">
+      <div class="delivery-timer__icon shrink-0 mt-0.5 text-amber-400">
+        <svg class="w-6 h-6 stroke-current fill-none" viewBox="0 0 24 24" stroke-width="2">
+          <circle cx="12" cy="12" r="9" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 7v5l3 3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="delivery-timer__content flex-1 grid gap-3 text-sm font-normal text-amber-100/90 leading-relaxed">
+        <p class="m-0">
+          {{ block.settings.prefix_text | default: 'Order in the next' | escape }}
+          <span class="font-medium text-amber-200" data-countdown-text>5 hours 12 minutes</span>
+          {{ block.settings.middle_text | default: 'to get it between' | escape }}
+          <span class="font-medium text-amber-200" data-delivery-range>Thursday 27 Aug and Friday 28 Aug</span>
+        </p>
+
+        <div class="delivery-timer__boxes flex items-center gap-2 pt-1">
+          <div class="delivery-timer__box flex items-center justify-center min-w-[42px] h-[34px] px-2.5 rounded-md bg-neutral-200 text-neutral-900 font-semibold text-sm shadow-inner" data-box-hours>
+            05
+          </div>
+          <div class="delivery-timer__box flex items-center justify-center min-w-[42px] h-[34px] px-2.5 rounded-md bg-neutral-200 text-neutral-900 font-semibold text-sm shadow-inner" data-box-minutes>
+            12
+          </div>
+          <div class="delivery-timer__box flex items-center justify-center min-w-[42px] h-[34px] px-2.5 rounded-md bg-neutral-200 text-neutral-900 font-semibold text-sm shadow-inner" data-box-seconds>
+            07
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</delivery-timer>
+
+<script>
+  if (!customElements.get('delivery-timer')) {
+    customElements.define('delivery-timer', class DeliveryTimer extends HTMLElement {
+      connectedCallback() {
+        this.cutoffHours = parseInt(this.dataset.cutoffHours || '5', 10);
+        this.cutoffMinutes = parseInt(this.dataset.cutoffMinutes || '12', 10);
+        this.startDays = parseInt(this.dataset.startDays || '2', 10);
+        this.endDays = parseInt(this.dataset.endDays || '3', 10);
+
+        this.countdownTextEl = this.querySelector('[data-countdown-text]');
+        this.deliveryRangeEl = this.querySelector('[data-delivery-range]');
+        this.boxHoursEl = this.querySelector('[data-box-hours]');
+        this.boxMinutesEl = this.querySelector('[data-box-minutes]');
+        this.boxSecondsEl = this.querySelector('[data-box-seconds]');
+
+        this.initTimer();
+        this.calculateDates();
+      }
+
+      initTimer() {
+        // Set target duration in milliseconds (evergreen timer stored in localStorage or default cutoff)
+        const storageKey = 'ekko_delivery_cutoff_target';
+        let targetTime = localStorage.getItem(storageKey);
+        const now = Date.now();
+
+        if (!targetTime || parseInt(targetTime, 10) <= now) {
+          const totalMs = (this.cutoffHours * 3600 + this.cutoffMinutes * 60) * 1000;
+          targetTime = now + totalMs;
+          localStorage.setItem(storageKey, targetTime);
+        } else {
+          targetTime = parseInt(targetTime, 10);
+        }
+
+        const update = () => {
+          const currentNow = Date.now();
+          let diff = targetTime - currentNow;
+
+          if (diff <= 0) {
+            const totalMs = (this.cutoffHours * 3600 + this.cutoffMinutes * 60) * 1000;
+            targetTime = currentNow + totalMs;
+            localStorage.setItem(storageKey, targetTime);
+            diff = totalMs;
+          }
+
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+          const hStr = String(hours).padStart(2, '0');
+          const mStr = String(minutes).padStart(2, '0');
+          const sStr = String(seconds).padStart(2, '0');
+
+          if (this.boxHoursEl) this.boxHoursEl.textContent = hStr;
+          if (this.boxMinutesEl) this.boxMinutesEl.textContent = mStr;
+          if (this.boxSecondsEl) this.boxSecondsEl.textContent = sStr;
+
+          if (this.countdownTextEl) {
+            let text = '';
+            if (hours > 0) text += `${hours} hour${hours > 1 ? 's' : ''} `;
+            text += `${minutes} minute${minutes > 1 ? 's' : ''}`;
+            this.countdownTextEl.textContent = text;
+          }
+        };
+
+        update();
+        this.timer = setInterval(update, 1000);
+      }
+
+      calculateDates() {
+        if (!this.deliveryRangeEl) return;
+
+        const options = { weekday: 'long', day: 'numeric', month: 'short' };
+        const now = new Date();
+
+        const startDate = new Date(now);
+        startDate.setDate(now.getDate() + this.startDays);
+
+        const endDate = new Date(now);
+        endDate.setDate(now.getDate() + this.endDays);
+
+        const startStr = startDate.toLocaleDateString('en-US', options);
+        const endStr = endDate.toLocaleDateString('en-US', options);
+
+        this.deliveryRangeEl.textContent = `${startStr} and ${endStr}`;
+      }
+
+      disconnectedCallback() {
+        if (this.timer) clearInterval(this.timer);
+      }
+    });
+  }
+</script>
+
+{% schema %}
+{
+  "name": "Delivery timer",
+  "settings": [
+    { "type": "text", "id": "prefix_text", "label": "Prefix text", "default": "Order in the next" },
+    { "type": "text", "id": "middle_text", "label": "Middle text", "default": "to get it between" },
+    { "type": "number", "id": "cutoff_hours", "label": "Countdown hours", "default": 5 },
+    { "type": "number", "id": "cutoff_minutes", "label": "Countdown minutes", "default": 12 },
+    { "type": "number", "id": "delivery_start_days", "label": "Delivery start (days from now)", "default": 2 },
+    { "type": "number", "id": "delivery_end_days", "label": "Delivery end (days from now)", "default": 3 }
+  ],
+  "presets": [{ "name": "Delivery timer" }]
+}
+{% endschema %}

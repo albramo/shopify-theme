@@ -18,7 +18,10 @@
         },
         "vendor": {
           "type": "product-vendor",
-          "settings": {}
+          "settings": {
+            "show_verified_badge": true,
+            "verified_text": "Verified brand"
+          }
         },
         "title": {
           "type": "product-title",
@@ -32,19 +35,30 @@
         },
         "price": {
           "type": "product-price",
-          "settings": {}
-        },
-        "inventory": {
-          "type": "product-inventory",
           "settings": {
-            "inventory_style": "status_bar",
-            "inventory_threshold": 10,
-            "inventory_bar_max": 20,
-            "show_inventory_quantity": "always",
-            "show_inventory_transfer": true,
-            "in_stock_color": "#109B36",
-            "low_stock_color": "#109B36",
-            "bar_background_color": "#E5E7EB"
+            "show_save_badge": true
+          }
+        },
+        "live_viewers": {
+          "type": "product-live-viewers",
+          "settings": {
+            "min_viewers": 14,
+            "viewing_text": "people are viewing this now",
+            "show_eye_icon": true,
+            "show_stock_status": true,
+            "default_stock": 3,
+            "stock_text": "left in stock"
+          }
+        },
+        "delivery_timer": {
+          "type": "product-delivery-timer",
+          "settings": {
+            "prefix_text": "Order in the next",
+            "middle_text": "to get it between",
+            "cutoff_hours": 5,
+            "cutoff_minutes": 12,
+            "delivery_start_days": 2,
+            "delivery_end_days": 3
           }
         },
         "description": {
@@ -124,7 +138,6 @@
         "buyer_protection": {
           "type": "product-buyer-protection",
           "settings": {},
-
           "blocks": {
             "secure_payments": {
               "type": "_product-buyer-protection-item",
@@ -234,7 +247,8 @@
         "title",
         "rating",
         "price",
-        "inventory",
+        "live_viewers",
+        "delivery_timer",
         "description",
         "notice",
         "coupon",

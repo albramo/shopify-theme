@@ -1,6 +1,6 @@
 {% doc %}
-  Product price and optional tax/payment terms.
-{% enddoc %}
+  Product price and optional tax/payment terms with save badge.
+{% doc %}
 
 {%- liquid
   assign product_item = section.settings.product | default: product
@@ -13,11 +13,11 @@
 
 <div class="ekko-product-block product__price grid gap-3" style="--product-block-color: {{ block.settings.color }};">
   <div id="Price-{{ section.id }}-{{ product_id }}">
-    {%- render 'product-price', product: product_item, placeholder: placeholder, use_variant: true, class: 'flex flex-wrap items-baseline gap-2' -%}
+    {%- render 'product-price', product: product_item, placeholder: placeholder, use_variant: true, show_save_badge: block.settings.show_save_badge, class: 'flex flex-wrap items-center gap-3' -%}
   </div>
 
   {%- if block.settings.show_taxes_notice and product_item != blank -%}
-    <div class="product__tax rte text-sm">
+    <div class="product__tax rte text-sm opacity-80">
       {%- if cart.taxes_included and shop.shipping_policy.body != blank -%}
         {{- 'products.product.include_taxes' | t -}}
         {{- 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url -}}
@@ -44,6 +44,7 @@
 {
   "name": "Product price",
   "settings": [
+    { "type": "checkbox", "id": "show_save_badge", "label": "Show save amount badge", "default": true },
     { "type": "header", "content": "Additional information" },
     { "type": "checkbox", "id": "show_payment_terms", "label": "Show installment payment terms", "default": true },
     { "type": "checkbox", "id": "show_taxes_notice", "label": "Show tax and shipping notice", "default": true },

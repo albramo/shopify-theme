@@ -1,0 +1,57 @@
+{% doc %}
+  Product live viewers and stock urgency block.
+  Displays live viewing count and remaining stock status matching reference design.
+{% doc %}
+
+{%- liquid
+  assign product_item = section.settings.product | default: product
+  assign variant = product_item.selected_or_first_available_variant
+
+  assign viewer_count = block.settings.min_viewers | default: 14
+  assign stock_count = variant.inventory_quantity
+  if stock_count <= 0 or variant.inventory_management == blank
+    assign stock_count = block.settings.default_stock | default: 3
+  endif
+-%}
+
+<div
+  class="ekko-product-block ekko-product-live-viewers py-1"
+  style="--product-block-color: {{ block.settings.color }};"
+>
+  <div class="inline-flex items-center gap-2 text-sm text-neutral-400 dark:text-neutral-400 font-normal">
+    <span class="relative flex h-2.5 w-2.5 items-center justify-center shrink-0">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+    </span>
+
+    {%- if block.settings.show_eye_icon -%}
+      <svg class="w-4 h-4 text-neutral-400 shrink-0 fill-none stroke-current" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+    {%- endif -%}
+
+    <span>
+      <strong class="font-medium text-neutral-200" data-live-viewers>{{ viewer_count }}</strong> {{ block.settings.viewing_text | default: 'people are viewing this now' | escape }}
+      {%- if block.settings.show_stock_status -%}
+        &nbsp;—&nbsp;<strong class="font-medium text-neutral-200" data-stock-count>{{ stock_count }}</strong> {{ block.settings.stock_text | default: 'left in stock' | escape }}
+      {%- endif -%}
+    </span>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Live viewers & stock",
+  "settings": [
+    { "type": "number", "id": "min_viewers", "label": "Default viewing count", "default": 14 },
+    { "type": "text", "id": "viewing_text", "label": "Viewing text", "default": "people are viewing this now" },
+    { "type": "checkbox", "id": "show_eye_icon", "label": "Show eye icon", "default": true },
+    { "type": "checkbox", "id": "show_stock_status", "label": "Show remaining stock status", "default": true },
+    { "type": "number", "id": "default_stock", "label": "Fallback stock count", "default": 3 },
+    { "type": "text", "id": "stock_text", "label": "Stock text", "default": "left in stock" },
+    { "type": "color", "id": "color", "label": "Text color", "default": "#9CA3AF" }
+  ],
+  "presets": [{ "name": "Live viewers & stock" }]
+}
+{% endschema %}
