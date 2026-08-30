@@ -90,11 +90,12 @@
     transform: translateY(calc(-100% - var(--border-radius)));
   }
 
+  .mobile-dock-section .mobile-dock,
   .header-sticky.header-hidden~.mobile-dock-section .mobile-dock,
   .mobile-dock-section.active .mobile-dock,
   .mobile-dock-section.shopify-active .mobile-dock,
   .mobile-dock-section .mobile-dock.active {
-    transform: translateY(0)
+    transform: translateY(0);
   }
 
   .mobile-dock-section~.page-container :is(.facet-sticky, .product-sticky-form) {

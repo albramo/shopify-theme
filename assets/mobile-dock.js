@@ -38,24 +38,14 @@ if (!customElements.get('mobile-dock')) {
       }
     
       detectForHeader() {
-        const header = document.querySelector('.header-section');
-        if (header === null) {
+        if (this.section) {
           this.section.classList.add('active');
-          return;
-        }
-        
-        if (!header.classList.contains('header-sticky')) {
-          this.scrollY  = parseInt(header.getBoundingClientRect().bottom);
-          window.addEventListener('scroll', theme.utils.throttle(this.onScrollForHeader.bind(this)), false);
         }
       }
     
       onScrollForHeader() {
-        if (window.scrollY >= this.scrollY) {
+        if (this.section) {
           this.section.classList.add('active');
-        }
-        else {
-          this.section.classList.remove('active');
         }
       }
     
