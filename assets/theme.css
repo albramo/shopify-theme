@@ -6784,17 +6784,50 @@ ol {
 
 /*! gift-wrapping */
 
+.gift-wrapping {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: var(--border-radius-small, 12px);
+  background: color-mix(in srgb, currentColor 2%, transparent);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
 .cart-drawer .gift-wrapping {
-  padding: var(--sp-5);
-  border: 1px solid rgb(var(--color-border-light));
+  padding: var(--sp-4, 1rem);
+  border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-radius: var(--border-radius-small, 12px);
+  background: color-mix(in srgb, currentColor 2.5%, transparent);
 }
 
 [data-rounded-block=round] .cart-drawer .gift-wrapping {
-  border-radius: var(--border-radius-small);
+  border-radius: var(--border-radius-small, 12px);
 }
 
 .gift-wrapping .loader:not([hidden])~input {
   visibility: hidden;
+}
+
+.gift-wrapping__label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.gift-wrapping label {
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: inherit;
+  user-select: none;
+}
+
+.gift-wrapping input[type="checkbox"] {
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 /*! free-shipping-bar */
