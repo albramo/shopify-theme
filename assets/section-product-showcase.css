@@ -786,21 +786,26 @@
 @media screen and (max-width: 1023px) {
   .quick-view .quick-view__content {
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .quick-view .ekko-product-showcase-section--modal,
   .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__frame {
-    height: auto;
+    height: auto !important;
     min-height: 100%;
   }
 
   .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase.product {
     display: flex;
+    flex-direction: column;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__details {
-    padding-block-end: max(var(--sp-8), env(safe-area-inset-bottom));
+    padding-block-end: max(var(--sp-12), calc(env(safe-area-inset-bottom) + 3rem));
   }
 }
 

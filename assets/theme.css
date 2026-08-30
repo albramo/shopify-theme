@@ -10805,12 +10805,23 @@ details.active .drawer__promotions .mega-menu__item,
 @media screen and (max-width: 1023px) {
   .quick-view .drawer__inner {
     max-height: 90vh;
+    height: 90vh !important;
   }
   .quick-view__content {
-    height: auto;
+    height: 100% !important;
     max-height: 100%;
-    overflow-y: auto;
+    overflow-x: hidden;
+    overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .quick-view .ekko-product-showcase-section--modal,
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__frame,
+  .quick-view .ekko-product-showcase,
+  .quick-view .product {
+    height: auto !important;
+    min-height: min-content;
+    overflow: visible !important;
   }
 }
 
