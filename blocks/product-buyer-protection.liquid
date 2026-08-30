@@ -39,7 +39,7 @@
   aria-label="{{ block.settings.heading | escape }}"
 >
   <div class="ekko-buyer-protection__header">
-    {%- if block.settings.style == 'cards' and block.settings.show_header_icon -%}
+    {%- if block.settings.show_header_icon != false -%}
       <span class="ekko-buyer-protection__shield" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none">
           <path d="M12 2.75 4.75 5.8v5.05c0 4.8 2.93 8.87 7.25 10.4 4.32-1.53 7.25-5.6 7.25-10.4V5.8L12 2.75Z" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
@@ -116,21 +116,23 @@
   .ekko-buyer-protection {
     width: 100%;
     min-width: 0;
-    padding: .85rem 0 .35rem;
-    border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
-    background: var(--buyer-protection-background);
+    padding: 1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+    border-radius: max(0.75rem, var(--buyer-protection-radius, 12px));
+    background: var(--buyer-protection-card-background, var(--buyer-protection-background, color-mix(in srgb, currentColor 2%, transparent)));
     color: var(--buyer-protection-color);
   }
 
   .ekko-buyer-protection--density-compact {
-    padding-top: .65rem;
+    padding: 0.85rem;
   }
 
   .ekko-buyer-protection--style-cards {
     padding: 1.1rem;
     overflow: hidden;
-    border-top: 0;
-    border-radius: var(--buyer-protection-radius);
+    border-radius: var(--buyer-protection-radius, 14px);
     background: var(--buyer-protection-card-background);
   }
 
@@ -141,38 +143,39 @@
   .ekko-buyer-protection__header {
     display: flex;
     align-items: center;
-    gap: .8rem;
+    gap: .75rem;
     min-height: 2rem;
+    margin-bottom: 0.75rem;
     color: inherit;
   }
 
   .ekko-buyer-protection__shield {
     display: grid;
-    flex: 0 0 2.9rem;
+    flex: 0 0 2.5rem;
     place-items: center;
-    width: 2.9rem;
-    height: 2.9rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
-    background: var(--buyer-protection-icon-background);
+    background: var(--buyer-protection-icon-background, color-mix(in srgb, var(--buyer-protection-accent, currentColor) 12%, transparent));
     color: var(--buyer-protection-accent);
   }
 
   .ekko-buyer-protection__shield svg {
-    width: 1.55rem;
-    height: 1.55rem;
+    width: 1.35rem;
+    height: 1.35rem;
   }
 
   .ekko-buyer-protection__heading-group {
     display: grid;
     flex: 1 1 auto;
-    gap: .22rem;
+    gap: .15rem;
     min-width: 0;
   }
 
   .ekko-buyer-protection__heading-link {
     display: inline-flex;
     align-items: center;
-    gap: .65rem;
+    gap: .5rem;
     width: fit-content;
     max-width: 100%;
     color: inherit;
@@ -185,7 +188,7 @@
     font-family: var(--font-heading-family);
     font-size: 1.05rem;
     font-style: var(--font-heading-style);
-    font-weight: var(--font-heading-weight);
+    font-weight: 700;
     letter-spacing: -.012em;
     line-height: 1.25;
   }
@@ -202,19 +205,19 @@
 
   .ekko-buyer-protection__items {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: .55rem 1.2rem;
-    margin: .55rem 0 0;
+    flex-direction: column;
+    gap: .6rem;
+    margin: 0;
     padding: 0;
     list-style: none;
+    width: 100%;
   }
 
   .ekko-buyer-protection--style-cards .ekko-buyer-protection__items {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: .55rem;
-    margin-top: .9rem;
+    gap: .6rem;
+    margin-top: 0;
   }
 
   .ekko-buyer-protection[data-layout='grid'] .ekko-buyer-protection__items {
