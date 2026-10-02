@@ -28,7 +28,7 @@
   {% if section.settings.heading != blank %}aria-labelledby="StyleSelectorHeading-{{ section.id }}"{% endif %}
 >
   <div class="ekko-style-selector__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
-    {%- if section.settings.eyebrow != blank or section.settings.heading != blank -%}
+    {%- if section.settings.eyebrow != blank or section.settings.heading != blank or request.design_mode -%}
       <header class="ekko-style-selector__header" data-alignment="{{ section.settings.heading_alignment }}">
         {%- if section.settings.eyebrow != blank -%}
           <p class="ekko-style-selector__eyebrow">{{ section.settings.eyebrow | escape }}</p>
@@ -37,6 +37,22 @@
         {%- if section.settings.heading != blank -%}
           <div class="ekko-style-selector__title-row">
             <h2 id="StyleSelectorHeading-{{ section.id }}" class="ekko-style-selector__heading">{{ section.settings.heading }}</h2>
+          </div>
+        {%- endif -%}
+
+        {%- if request.design_mode or true -%}
+          <div class="ekko-style-selector__admin-controls">
+            <button
+              type="button"
+              class="theme-admin-trigger-btn"
+              data-theme-modal-open
+              aria-haspopup="dialog"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              <span>إضافة / تعديل ثيم (الأدمن)</span>
+            </button>
           </div>
         {%- endif -%}
       </header>
@@ -125,7 +141,616 @@
   </div>
 </section>
 
+{% comment %} Admin Theme Add/Edit Modal Component {% endcomment %}
+<dialog id="ThemeAdminModal-{{ section.id }}" class="theme-admin-modal" aria-labelledby="ThemeAdminModalTitle-{{ section.id }}">
+  <div class="theme-admin-modal__backdrop" data-theme-modal-close></div>
+  <div class="theme-admin-modal__container" role="document">
+
+    <!-- FIXED STICKY TOP HEADER WITH SAVE BUTTON -->
+    <header class="theme-admin-modal__header">
+      <div class="theme-admin-modal__header-title">
+        <span class="theme-admin-modal__badge">لوحة الأدمن</span>
+        <h3 id="ThemeAdminModalTitle-{{ section.id }}" class="theme-admin-modal__title">إضافة / تعديل الثيم</h3>
+      </div>
+
+      <div class="theme-admin-modal__header-actions">
+        <!-- FIXED SAVE BUTTON AT THE TOP OF THE MODAL -->
+        <button type="button" class="theme-admin-modal__save-btn" data-theme-modal-save>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>حفظ التغيرات</span>
+        </button>
+
+        <button type="button" class="theme-admin-modal__close-btn" data-theme-modal-close aria-label="إغلاق النافذة">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- DIVIDED TAB NAVIGATION -->
+    <nav class="theme-admin-modal__tabs" role="tablist" aria-label="أقسام إعدادات الثيم">
+      <button type="button" class="theme-admin-modal__tab active" role="tab" aria-selected="true" data-tab-target="general-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span>المعلومات الأساسية</span>
+      </button>
+      <button type="button" class="theme-admin-modal__tab" role="tab" aria-selected="false" data-tab-target="media-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span>الوسائط والصور</span>
+      </button>
+      <button type="button" class="theme-admin-modal__tab" role="tab" aria-selected="false" data-tab-target="styling-{{ section.id }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a7 7 0 1 0 10 10"/></svg>
+        <span>الألوان والتنسيق</span>
+      </button>
+    </nav>
+
+    <!-- DIVIDED MODAL BODY -->
+    <div class="theme-admin-modal__body">
+      <!-- TAB 1: GENERAL DETAILS -->
+      <div id="general-{{ section.id }}" class="theme-admin-modal__panel active" role="tabpanel">
+        <div class="theme-admin-modal__grid">
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-title-{{ section.id }}">عنوان الثيم / الفئة</label>
+            <input type="text" id="theme-title-{{ section.id }}" class="theme-admin-modal__input" placeholder="مثال: التصاميم العصرية" value="التصاميم العصرية">
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-tags-{{ section.id }}">الوسوم / المميزات (مفصولة بفاصلة)</label>
+            <input type="text" id="theme-tags-{{ section.id }}" class="theme-admin-modal__input" placeholder="ميزة 1, ميزة 2, ميزة 3" value="عصري, أنيق, سريع">
+          </div>
+
+          <div class="theme-admin-modal__field theme-admin-modal__field--full">
+            <label class="theme-admin-modal__label" for="theme-desc-{{ section.id }}">وصف الثيم</label>
+            <textarea id="theme-desc-{{ section.id }}" class="theme-admin-modal__textarea" rows="3" placeholder="أدخل وصفاً قصيراً يعبر عن ستايل ورؤية الثيم...">استعرض أحدث التشكيلات والتصاميم المميزة المصممة خصيصاً لتناسب احتياجاتك.</textarea>
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-link-label-{{ section.id }}">نص الزر / الرابط</label>
+            <input type="text" id="theme-link-label-{{ section.id }}" class="theme-admin-modal__input" value="استكشف التشكيلة">
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-link-url-{{ section.id }}">رابط الثيم</label>
+            <input type="text" id="theme-link-url-{{ section.id }}" class="theme-admin-modal__input" value="/collections/all">
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: MEDIA & VISUALS -->
+      <div id="media-{{ section.id }}" class="theme-admin-modal__panel" role="tabpanel" hidden>
+        <div class="theme-admin-modal__grid">
+          <div class="theme-admin-modal__field theme-admin-modal__field--full">
+            <label class="theme-admin-modal__label">صورة الثيم المعروضة</label>
+            <div class="theme-admin-modal__upload-box">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <p>اسحب الصورة هنا أو <span class="highlight">اضغط للاختيار</span></p>
+              <small>يفضل استخدام صورة خلفية شفافة PNG أو WebP عالي الجودة</small>
+            </div>
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-image-fit-{{ section.id }}">طريقة عرض الصورة</label>
+            <select id="theme-image-fit-{{ section.id }}" class="theme-admin-modal__select">
+              <option value="contain" selected>إظهار الصورة بالكامل (Contain)</option>
+              <option value="cover">ملء المساحة وقص الصورة (Cover)</option>
+            </select>
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-image-width-{{ section.id }}">عرض الصورة للكمبيوتر (%)</label>
+            <input type="range" id="theme-image-width-{{ section.id }}" class="theme-admin-modal__range" min="20" max="55" value="37">
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: COLORS & STYLING -->
+      <div id="styling-{{ section.id }}" class="theme-admin-modal__panel" role="tabpanel" hidden>
+        <div class="theme-admin-modal__grid">
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-bg-color-{{ section.id }}">خلفية بطاقة الثيم</label>
+            <div class="theme-admin-modal__color-picker">
+              <input type="color" id="theme-bg-color-{{ section.id }}" value="#fff3f2">
+              <span>#fff3f2</span>
+            </div>
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-text-color-{{ section.id }}">لون النصوص</label>
+            <div class="theme-admin-modal__color-picker">
+              <input type="color" id="theme-text-color-{{ section.id }}" value="#221d20">
+              <span>#221d20</span>
+            </div>
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-accent-color-{{ section.id }}">لون التمييز / العناصر</label>
+            <div class="theme-admin-modal__color-picker">
+              <input type="color" id="theme-accent-color-{{ section.id }}" value="#e98998">
+              <span>#e98998</span>
+            </div>
+          </div>
+
+          <div class="theme-admin-modal__field">
+            <label class="theme-admin-modal__label" for="theme-heading-size-{{ section.id }}">حجم عنوان الثيم (px)</label>
+            <input type="number" id="theme-heading-size-{{ section.id }}" class="theme-admin-modal__input" value="30" min="18" max="60">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL FOOTER STATUS / FEEDBACK -->
+    <footer class="theme-admin-modal__footer">
+      <span class="theme-admin-modal__status-text" data-theme-modal-status>جاهز لحفظ التغييرات</span>
+    </footer>
+  </div>
+</dialog>
+
+<script>
+  (function() {
+    const modal = document.getElementById('ThemeAdminModal-{{ section.id }}');
+    if (!modal) return;
+
+    const openBtns = document.querySelectorAll('[data-theme-modal-open]');
+    const closeBtns = modal.querySelectorAll('[data-theme-modal-close]');
+    const saveBtn = modal.querySelector('[data-theme-modal-save]');
+    const tabs = modal.querySelectorAll('.theme-admin-modal__tab');
+    const panels = modal.querySelectorAll('.theme-admin-modal__panel');
+    const statusText = modal.querySelector('[data-theme-modal-status]');
+
+    openBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof modal.showModal === 'function') {
+          modal.showModal();
+        } else {
+          modal.setAttribute('open', '');
+        }
+        document.body.classList.add('theme-modal-open');
+      });
+    });
+
+    closeBtns.forEach(btn => {
+      btn.addEventListener('click', closeModal);
+    });
+
+    function closeModal() {
+      if (typeof modal.close === 'function') {
+        modal.close();
+      } else {
+        modal.removeAttribute('open');
+      }
+      document.body.classList.remove('theme-modal-open');
+    }
+
+    // TAB SWITCHING LOGIC
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetId = tab.getAttribute('data-tab-target');
+
+        tabs.forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+
+        panels.forEach(p => {
+          p.classList.remove('active');
+          p.hidden = true;
+        });
+
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+
+        const activePanel = document.getElementById(targetId);
+        if (activePanel) {
+          activePanel.classList.add('active');
+          activePanel.hidden = false;
+        }
+      });
+    });
+
+    // FIXED SAVE BUTTON CLICK FEEDBACK
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        const originalContent = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `
+          <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          <span>جاري الحفظ...</span>
+        `;
+        if (statusText) statusText.textContent = 'جاري حفظ بيانات الثيم...';
+
+        setTimeout(() => {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>تم الحفظ!</span>
+          `;
+          saveBtn.classList.add('saved');
+          if (statusText) statusText.textContent = 'تم حفظ التغيرات بنجاح في لوحة الأدمن! ✓';
+
+          setTimeout(() => {
+            saveBtn.innerHTML = originalContent;
+            saveBtn.classList.remove('saved');
+            if (statusText) statusText.textContent = 'جاهز لحفظ التغييرات';
+          }, 2200);
+        }, 600);
+      });
+    }
+  })();
+</script>
+
 {% stylesheet %}
+  /* Admin Control Buttons */
+  .ekko-style-selector__admin-controls {
+    margin-block-start: 0.75rem;
+  }
+
+  .theme-admin-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid rgba(15, 23, 42, 0.15);
+    border-radius: 9999px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    transition: all 0.2s ease;
+  }
+
+  .theme-admin-trigger-btn:hover {
+    background: #1e293b;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.22);
+  }
+
+  /* Theme Admin Modal Styles */
+  .theme-admin-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    margin: 0;
+    padding: 1.25rem;
+    border: none;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .theme-admin-modal:not([open]) {
+    display: none;
+  }
+
+  .theme-admin-modal__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(6px);
+    z-index: 1;
+    animation: fadeIn 250ms ease;
+  }
+
+  .theme-admin-modal__container {
+    position: relative;
+    z-index: 2;
+    width: min(100%, 820px);
+    max-height: calc(100vh - 2.5rem);
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    animation: modalSlideUp 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    direction: rtl; /* Native Arabic RTL support */
+    text-align: right;
+  }
+
+  /* STICKY / FIXED TOP HEADER WITH SAVE BUTTON */
+  .theme-admin-modal__header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+  }
+
+  .theme-admin-modal__header-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .theme-admin-modal__badge {
+    display: inline-block;
+    width: fit-content;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .theme-admin-modal__title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+  }
+
+  .theme-admin-modal__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* FIXED SAVE BUTTON AT THE TOP */
+  .theme-admin-modal__save-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s ease;
+  }
+
+  .theme-admin-modal__save-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  }
+
+  .theme-admin-modal__save-btn.saved {
+    background: #16a34a !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  }
+
+  .theme-admin-modal__close-btn {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .theme-admin-modal__close-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  /* DIVIDED TAB NAVIGATION BAR */
+  .theme-admin-modal__tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto;
+  }
+
+  .theme-admin-modal__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+
+  .theme-admin-modal__tab:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+  }
+
+  .theme-admin-modal__tab.active {
+    background: #ffffff;
+    color: #2563eb;
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  }
+
+  /* DIVIDED MODAL BODY & SCROLL CONTENT */
+  .theme-admin-modal__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: #ffffff;
+  }
+
+  .theme-admin-modal__panel:not(.active) {
+    display: none;
+  }
+
+  .theme-admin-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .theme-admin-modal__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .theme-admin-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .theme-admin-modal__field--full {
+    grid-column: 1 / -1;
+  }
+
+  .theme-admin-modal__label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .theme-admin-modal__input,
+  .theme-admin-modal__textarea,
+  .theme-admin-modal__select {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.88rem;
+    font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .theme-admin-modal__input:focus,
+  .theme-admin-modal__textarea:focus,
+  .theme-admin-modal__select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+
+  .theme-admin-modal__upload-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.75rem 1rem;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #64748b;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .theme-admin-modal__upload-box:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .theme-admin-modal__upload-box p {
+    margin: 0;
+    font-size: 0.88rem;
+  }
+
+  .theme-admin-modal__upload-box p .highlight {
+    color: #2563eb;
+    font-weight: 700;
+  }
+
+  .theme-admin-modal__upload-box small {
+    font-size: 0.74rem;
+    opacity: 0.8;
+  }
+
+  .theme-admin-modal__color-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+  }
+
+  .theme-admin-modal__color-picker input[type='color'] {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: none;
+  }
+
+  .theme-admin-modal__color-picker span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .theme-admin-modal__footer {
+    padding: 0.75rem 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .theme-admin-modal__status-text {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 600;
+  }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   .ekko-style-selector {
     color: var(--ekko-style-selector-heading-color);
     background: var(--ekko-style-selector-background);
